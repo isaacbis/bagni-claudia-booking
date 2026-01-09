@@ -318,16 +318,23 @@ router.put("/admin/gallery", requireAdmin, async (req, res) => {
 /* =================== ADMIN USERS =================== */
 router.get("/admin/users", requireAdmin, async (req, res) => {
   const snap = await db.collection("users").get();
-  const items = [];
-  snap.forEach(d => {
-    const u = d.data();
-    items.push({
-      username: d.id,
-      role: u.role || "user",
-      credits: u.credits ?? 0,
-      disabled: !!u.disabled
+
+  const items = snap.docs
+    .map(d => {
+      const u = d.data();
+      return {
+        username: d.id,
+        role: u.role || "user",
+        credits: u.credits ?? 0,
+        disabled: !!u.disabled
+      };
+    })
+    .sort((a, b) => {
+      if (a.username === "admin") return -1;
+      if (b.username === "admin") return 1;
+      return Number(a.username) - Number(b.username);
     });
-  });
+
   res.json({ items });
 });
 
