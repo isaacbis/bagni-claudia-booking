@@ -1,11 +1,9 @@
-# env
-.env
-
-# firebase
-serviceAccountKey.json
-
-# node
+# Node
 node_modules/
 
-# logs
-npm-debug.log*
+# Firebase credentials (SOLO questi)
+*-firebase-adminsdk-*.json
+
+# OS / editor
+.DS_Store
+.env
