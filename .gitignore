@@ -1,0 +1,11 @@
+# env
+.env
+
+# firebase
+serviceAccountKey.json
+
+# node
+node_modules/
+
+# logs
+npm-debug.log*

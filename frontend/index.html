@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tommi38 – Prenotazione Campi</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tommi38">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">Tommi38</div>
+  <button id="logoutBtn" class="btn-ghost hidden">Logout</button>
+</header>
+
+<main class="wrap">
+
+<!-- LOGIN -->
+<section id="loginBox" class="card login-card">
+<div id="loginGallery" class="login-gallery"></div>
+  <h1 class="login-title">Tommi38</h1>
+  <p class="login-subtitle">Prenotazione Campi</p>
+
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button id="loginBtn" class="btn">Accedi</button>
+  <div id="loginErr" class="error hidden"></div>
+
+</section>
+
+<!-- LOADER GLOBALE -->
+<div id="appLoader" class="loader">
+  ⏳ Caricamento…
+</div>
+
+<section id="app" class="hidden">
+
+
+  <section class="card">
+    <h2 id="welcome"></h2>
+    <div id="creditsBox" class="muted"></div>
+    <span id="roleBadge" class="badge"></span>
+  </section>
+
+  <section class="card">
+    <h4>📌 Comunicazioni</h4>
+    <div id="notesView" class="muted"></div>
+  </section>
+<section id="fieldInfo" class="card card-tech">
+
+  <!-- popolato via JS -->
+</section>
+
+  <section class="card">
+    <h3>Prenota</h3>
+    <div class="grid3">
+      <input id="datePick" type="date">
+      <select id="fieldSelect"></select>
+      <select id="timeSelect"></select>
+    </div>
+    <button id="bookBtn" class="btn">Prenota</button>
+    <div id="bookMsg" class="muted"></div>
+
+    <hr class="sep">
+    <h3>Le tue prenotazioni</h3>
+    <div id="reservationsList" class="list"></div>
+  </section>
+
+<section id="weatherBox" class="card hidden">
+  <h4>🌤️ Meteo Senigallia</h4>
+
+  <div class="weather-title">Meteo settimana</div>
+  <div id="weatherRow" class="weather-row"></div>
+</section>
+
+
+  <!-- ADMIN MENU -->
+  <section id="adminMenu" class="card hidden">
+    <h3>👑 Area Admin</h3>
+    <button id="btnAdminConfig" class="btn">Config</button>
+    <button id="btnAdminNotes" class="btn">Note</button>
+    <button id="btnAdminFields" class="btn">Campi</button>
+    <button id="btnAdminUsers" class="btn">Utenti</button>
+    <button id="btnAdminGallery" class="btn">Galleria Login</button>
+  </section>
+
+  <!-- ADMIN CONFIG -->
+  <section id="adminConfig" class="card hidden">
+    <h4>Configurazione</h4>
+    <input id="cfgSlotMinutes" type="number" placeholder="Durata slot (min)">
+    <input id="cfgDayStart" type="time">
+    <input id="cfgDayEnd" type="time">
+    <input id="cfgMaxPerDay" type="number" placeholder="Max prenotazioni/giorno">
+    <input id="cfgMaxActive" type="number" placeholder="Max prenotazioni attive">
+    <button id="saveConfigBtn" class="btn">Salva</button>
+    <button class="btn-ghost backAdmin">⬅ Indietro</button>
+  </section>
+
+  <!-- ADMIN NOTES -->
+  <section id="adminNotes" class="card hidden">
+    <textarea id="notesText" placeholder="Note pubbliche"></textarea>
+    <button id="saveNotesBtn" class="btn">Salva</button>
+    <button class="btn-ghost backAdmin">⬅ Indietro</button>
+  </section>
+
+  <!-- ADMIN FIELDS -->
+  <section id="adminFields" class="card hidden">
+    <input id="newFieldId" placeholder="ID campo">
+    <input id="newFieldName" placeholder="Nome campo">
+    <button id="addFieldBtn" class="btn">Aggiungi campo</button>
+    <div id="fieldsList" class="list"></div>
+    <button id="saveFieldsBtn" class="btn">Salva campi</button>
+    <button class="btn-ghost backAdmin">⬅ Indietro</button>
+  </section>
+
+  <!-- ADMIN USERS -->
+  <section id="adminUsers" class="card hidden">
+    <div id="usersList" class="list"></div>
+    <button class="btn-ghost backAdmin">⬅ Indietro</button>
+  </section>
+
+  <!-- ADMIN GALLERY -->
+  <section id="adminGallery" class="card hidden">
+    <input id="galleryUrl" placeholder="URL immagine">
+    <input id="galleryCaption" placeholder="Didascalia">
+<input id="galleryLink" placeholder="Link al sito (https://...)">
+    <button id="addGalleryBtn" class="btn">Aggiungi</button>
+    <div id="galleryList" class="list"></div>
+    <button id="saveGalleryBtn" class="btn">Salva galleria</button>
+    <button class="btn-ghost backAdmin">⬅ Indietro</button>
+  </section>
+
+</section>
+</main>
+
+<script src="/script.js" defer></script>
+</body>
+</html>
