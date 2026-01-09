@@ -96,5 +96,5 @@ app.get("*", (req, res) => {
    ====================================================== */
 const PORT = Number(process.env.PORT || 3001);
 app.listen(PORT, () => {
-  console.log("✅ Server Tommi38 avviato sulla porta", PORT);
+  console.log("✅ Server Bagni Claudia avviato sulla porta", PORT);
 });
