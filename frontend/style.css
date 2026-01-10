@@ -750,3 +750,11 @@ button:active{ transform: scale(.97); }
   border: 1px solid rgba(255,255,255,0.1);
   padding: 6px;
 }
+/* ===== BRAND CLAUDIA FIX ===== */
+.brand-claudia {
+  color: #ffffff !important;      /* bianco puro */
+  font-weight: 900;               /* grassetto forte */
+  letter-spacing: 0.12em;
+  -webkit-text-fill-color: #ffffff;
+  background: none !important;    /* rimuove gradiente */
+}
