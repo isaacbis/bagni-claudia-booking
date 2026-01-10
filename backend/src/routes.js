@@ -388,9 +388,12 @@ router.post("/admin/users/rename", requireAdmin, async (req, res) => {
     return res.status(400).json({ error: "Cannot rename admin" });
   }
 
-  if (!/^\d+$/.test(newUsername)) {
-    return res.status(400).json({ error: "Username must be numeric" });
-  }
+  if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
+  return res.status(400).json({
+    error: "Username can contain only letters, numbers and underscore"
+  });
+}
+
 
   const oldRef = db.collection("users").doc(oldUsername);
   const newRef = db.collection("users").doc(newUsername);
