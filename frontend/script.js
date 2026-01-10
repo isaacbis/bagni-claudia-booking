@@ -830,6 +830,22 @@ async function saveGallery() {
     body: JSON.stringify({ images: STATE.galleryDraft })
   });
 }
+qs("btnCleanPasswords").onclick = async () => {
+  if (!confirm("Sei sicuro? Verranno eliminate TUTTE le password in chiaro.")) {
+    return;
+  }
+
+  try {
+    const res = await api("/admin/cleanup-passwords", {
+      method: "POST"
+    });
+
+    alert(`✅ Operazione completata\nPassword rimosse: ${res.cleaned}`);
+  } catch (e) {
+    alert("❌ Errore durante la pulizia");
+    console.error(e);
+  }
+};
 
 /* ================= ADMIN NAV ================= */
 function openAdmin(id) {
