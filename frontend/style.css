@@ -88,7 +88,7 @@ body::after{
 }
 .brand{
   font-family: 'Montserrat', sans-serif;
-  font-weight: 400;              /* Bagni normale */
+  font-weight: 300;              /* Bagni normale */
   font-size: 20px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -753,7 +753,7 @@ button:active{ transform: scale(.97); }
 /* ===== BRAND CLAUDIA FIX ===== */
 .brand-claudia {
   color: #ffffff !important;
-  font-weight: 600;               /* 👈 SOLO Claudia in grassetto */
+  font-weight: 500;               /* 👈 SOLO Claudia in grassetto */
   letter-spacing: 0.12em;
   -webkit-text-fill-color: #ffffff;
   background: none !important;
