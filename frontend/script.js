@@ -589,6 +589,16 @@ async function saveFields() {
     method: "PUT",
     body: JSON.stringify({ fields: STATE.fieldsDraft })
   });
+
+  // 🔄 ricarica campi aggiornati
+  const pub = await api("/public/config");
+  STATE.fields = pub.fields || [];
+  STATE.fieldsDraft = [...STATE.fields];
+
+  renderFields();
+  renderFieldsAdmin();
+
+  alert("Campi aggiornati ✅");
 }
 
 /* ================= NOTES ================= */
@@ -597,7 +607,13 @@ async function saveNotes() {
     method: "PUT",
     body: JSON.stringify({ text: qs("notesText").value })
   });
+
+  STATE.notes = qs("notesText").value;
+  qs("notesView").textContent = STATE.notes || "Nessuna comunicazione.";
+
+  alert("Note aggiornate ✅");
 }
+
 
 /* ================= CONFIG ================= */
 async function saveConfig() {
@@ -611,6 +627,17 @@ async function saveConfig() {
       maxActiveBookingsPerUser: Number(qs("cfgMaxActive").value)
     })
   });
+
+  // 🔄 ricarica config aggiornata
+  const pub = await api("/public/config");
+  STATE.config = pub;
+
+  // 🔁 aggiorna UI che dipende dagli orari
+  renderTimeSelect();
+  renderFieldInfo();
+  await loadReservations();
+
+  alert("Configurazione aggiornata ✅");
 }
 
 /* ================= USERS ================= */
