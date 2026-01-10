@@ -88,14 +88,14 @@ body::after{
 }
 .brand{
   font-family: 'Montserrat', sans-serif;
-  font-weight: 400;               /* 👈 Bagni NORMALE */
+  font-weight: 400;              /* Bagni normale */
   font-size: 20px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  background: linear-gradient(90deg, var(--sun), var(--sun2), var(--sea));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  text-shadow: 0 10px 30px rgba(255,179,71,.12);
+  color: #ffffff;                /* 👈 Bagni BIANCO */
+  -webkit-text-fill-color: #ffffff;
+  background: none;              /* 👈 rimosso gradiente */
+  text-shadow: 0 10px 30px rgba(255,255,255,.15);
 }
 /* ===== Layout ===== */
 .wrap{
@@ -163,13 +163,13 @@ h4{ font-size: 16px; }
 .login-title{
   font-family: 'Montserrat', sans-serif;
   font-size: 36px;
-  font-weight: 400;               /* 👈 Bagni NORMALE */
+  font-weight: 400;              /* Bagni normale */
   letter-spacing: 0.18em;
   text-transform: uppercase;
   margin-bottom: 4px;
-  background: linear-gradient(90deg, var(--sand), var(--sun), var(--sun2));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
+  color: #ffffff;                /* 👈 Bagni BIANCO */
+  -webkit-text-fill-color: #ffffff;
+  background: none;              /* 👈 rimosso gradiente */
 }
 .login-subtitle{
   font-family: 'Montserrat', sans-serif;
@@ -753,7 +753,7 @@ button:active{ transform: scale(.97); }
 /* ===== BRAND CLAUDIA FIX ===== */
 .brand-claudia {
   color: #ffffff !important;
-  font-weight: 900;               /* 👈 SOLO Claudia in grassetto */
+  font-weight: 600;               /* 👈 SOLO Claudia in grassetto */
   letter-spacing: 0.12em;
   -webkit-text-fill-color: #ffffff;
   background: none !important;
