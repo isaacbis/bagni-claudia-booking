@@ -326,10 +326,24 @@ router.get("/admin/users", requireAdmin, async (req, res) => {
     credits: d.data().credits ?? 0,
     disabled: !!d.data().disabled
   }))
-  .filter(u => u.username !== "admin")
-  .sort((a, b) =>
-    a.username.localeCompare(b.username, "it", { numeric: true })
-  );
+  
+  .sort((a, b) => {
+  const aIsNum = /^\d+$/.test(a.username);
+  const bIsNum = /^\d+$/.test(b.username);
+
+  // alfabetici prima dei numerici
+  if (aIsNum && !bIsNum) return 1;
+  if (!aIsNum && bIsNum) return -1;
+
+  // entrambi alfabetici
+  if (!aIsNum && !bIsNum) {
+    return a.username.localeCompare(b.username, "it");
+  }
+
+  // entrambi numerici
+  return Number(a.username) - Number(b.username);
+});
+
   res.json({ items });
 });
 
