@@ -320,21 +320,16 @@ router.get("/admin/users", requireAdmin, async (req, res) => {
   const snap = await db.collection("users").get();
 
   const items = snap.docs
-    .map(d => {
-      const u = d.data();
-      return {
-        username: d.id,
-        role: u.role || "user",
-        credits: u.credits ?? 0,
-        disabled: !!u.disabled
-      };
-    })
-    .sort((a, b) => {
-      if (a.username === "admin") return -1;
-      if (b.username === "admin") return 1;
-      return Number(a.username) - Number(b.username);
-    });
-
+  .map(d => ({
+    username: d.id,
+    role: d.data().role || "user",
+    credits: d.data().credits ?? 0,
+    disabled: !!d.data().disabled
+  }))
+  .filter(u => u.username !== "admin")
+  .sort((a, b) =>
+    a.username.localeCompare(b.username, "it", { numeric: true })
+  );
   res.json({ items });
 });
 
@@ -388,11 +383,17 @@ router.post("/admin/users/rename", requireAdmin, async (req, res) => {
     return res.status(400).json({ error: "Cannot rename admin" });
   }
 
-  if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(newUsername)) {
   return res.status(400).json({
-    error: "Username can contain only letters, numbers and underscore"
+    error: "Username 3–20 caratteri, solo lettere, numeri o _"
   });
 }
+
+const reserved = ["admin", "root", "system"];
+if (reserved.includes(newUsername.toLowerCase())) {
+  return res.status(400).json({ error: "Username non consentito" });
+}
+
 
 
   const oldRef = db.collection("users").doc(oldUsername);
