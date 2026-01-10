@@ -88,9 +88,9 @@ body::after{
 }
 .brand{
   font-family: 'Montserrat', sans-serif;
-  font-weight: 500;
+  font-weight: 400;               /* 👈 Bagni NORMALE */
   font-size: 20px;
-  letter-spacing: 0.15em;      /* identico al logo */
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   background: linear-gradient(90deg, var(--sun), var(--sun2), var(--sea));
   -webkit-background-clip:text;
@@ -163,7 +163,7 @@ h4{ font-size: 16px; }
 .login-title{
   font-family: 'Montserrat', sans-serif;
   font-size: 36px;
-  font-weight: 500;
+  font-weight: 400;               /* 👈 Bagni NORMALE */
   letter-spacing: 0.18em;
   text-transform: uppercase;
   margin-bottom: 4px;
@@ -752,9 +752,9 @@ button:active{ transform: scale(.97); }
 }
 /* ===== BRAND CLAUDIA FIX ===== */
 .brand-claudia {
-  color: #ffffff !important;      /* bianco puro */
-  font-weight: 900;               /* grassetto forte */
+  color: #ffffff !important;
+  font-weight: 900;               /* 👈 SOLO Claudia in grassetto */
   letter-spacing: 0.12em;
   -webkit-text-fill-color: #ffffff;
-  background: none !important;    /* rimuove gradiente */
+  background: none !important;
 }
