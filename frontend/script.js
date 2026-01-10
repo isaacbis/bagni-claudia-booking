@@ -627,11 +627,11 @@ async function loadUsers() {
   <strong>${u.username}</strong> – crediti ${u.credits}
   <br>
   <input
-    type="number"
-    placeholder="Nuovo username"
-    class="rename-input"
-    style="width:120px;margin-top:4px;"
-  >
+  type="text"
+  placeholder="Nuovo username"
+  class="rename-input"
+  style="width:120px;margin-top:4px;"
+>
 `;
 
 
