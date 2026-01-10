@@ -753,13 +753,13 @@ button:active{ transform: scale(.97); }
 /* ===== BRAND CLAUDIA FIX ===== */
 .brand-claudia {
   color: #ffffff !important;
-  font-weight: 500;               /* 👈 SOLO Claudia in grassetto */
+  font-weight: 600;               /* 👈 SOLO Claudia in grassetto */
   letter-spacing: 0.12em;
   -webkit-text-fill-color: #ffffff;
   background: none !important;
 }
 .brand {
-  font-weight: 400;
+  font-weight: 300;
   letter-spacing: 0.16em;
 }
 
