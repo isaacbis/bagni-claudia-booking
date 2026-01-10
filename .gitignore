@@ -7,3 +7,10 @@ node_modules/
 # OS / editor
 .DS_Store
 .env
+
+# === SECURITY ===
+backend/serviceAccount.json
+users-passwords.txt
+*.env
+
+
