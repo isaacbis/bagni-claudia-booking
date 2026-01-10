@@ -744,3 +744,9 @@ button:active{ transform: scale(.97); }
     0 20px 45px rgba(255,179,71,.18),
     inset 0 0 0 1px rgba(255,255,255,.06);
 }
+.users-scroll {
+  max-height: 360px; /* ~10 utenti */
+  overflow-y: auto;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 6px;
+}

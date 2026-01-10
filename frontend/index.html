@@ -125,9 +125,19 @@
 
   <!-- ADMIN USERS -->
   <section id="adminUsers" class="card hidden">
-    <div id="usersList" class="list"></div>
-    <button class="btn-ghost backAdmin">⬅ Indietro</button>
-  </section>
+
+  <input
+    type="text"
+    id="userSearch"
+    placeholder="Cerca utente..."
+    style="margin-bottom:10px;width:100%;padding:6px;"
+  >
+
+  <div id="usersList" class="list users-scroll"></div>
+
+  <button class="btn-ghost backAdmin">⬅ Indietro</button>
+</section>
+
 
   <!-- ADMIN GALLERY -->
   <section id="adminGallery" class="card hidden">
