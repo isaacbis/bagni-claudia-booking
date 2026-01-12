@@ -781,6 +781,16 @@ async function resetAllPasswords() {
   if (!confirm("⚠️ Reset di MASSA delle password. Continuare?")) return;
 
   try {
+    // ================= RESET MASSIVO PASSWORD (FIX DOWNLOAD) =================
+async function resetAllPasswords() {
+  if (!confirm("⚠️ Reset di MASSA delle password. Continuare?")) return;
+
+  // 👉 apriamo SUBITO il download (user gesture valida)
+  const a = document.createElement("a");
+  a.download = "reset_passwords_bagni_claudia.txt";
+  document.body.appendChild(a);
+
+  try {
     const res = await api("/admin/users/reset-passwords-all", {
       method: "POST"
     });
@@ -798,21 +808,21 @@ async function resetAllPasswords() {
     const blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
 
-    const a = document.createElement("a");
     a.href = url;
-    a.download = "reset_passwords_bagni_claudia.txt";
-    document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
 
     URL.revokeObjectURL(url);
 
-    alert("✅ Password resettate e file scaricato");
+    alert("✅ Reset completato e file scaricato");
+
   } catch (e) {
     console.error(e);
     alert("❌ Errore nel reset password");
+  } finally {
+    document.body.removeChild(a);
   }
 }
+
 
 /* ================= GALLERY ================= */
 function renderLoginGallery() {
