@@ -839,3 +839,7 @@ button:active{ transform: scale(.97); }
     pointer-events: none;
   }
 }
+.rename-input {
+  width: 120px;
+  margin-top: 4px;
+}

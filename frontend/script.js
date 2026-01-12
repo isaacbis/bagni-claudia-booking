@@ -656,15 +656,15 @@ function renderUsers(filter = "") {
       d.className = "item";
 
       d.innerHTML = `
-        <strong>${u.username}</strong> – crediti ${u.credits}
-        <br>
-        <input
-          type="text"
-          placeholder="Nuovo username"
-          class="rename-input"
-          style="width:120px;margin-top:4px;"
-        >
-      `;
+  <strong>${u.username}</strong> – crediti ${u.credits}
+  <br>
+  <input
+    type="text"
+    placeholder="Nuovo username"
+    class="rename-input"
+  >
+`;
+
 
       // ✏️ CREDITI
       const edit = document.createElement("button");
