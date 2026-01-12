@@ -776,6 +776,7 @@ async function addCreditsToAllUsers() {
   }
 }
 // ================= RESET MASSIVO PASSWORD =================
+// ================= RESET MASSIVO PASSWORD =================
 async function resetAllPasswords() {
   if (!confirm("⚠️ Reset di MASSA delle password. Continuare?")) return;
 
@@ -807,7 +808,6 @@ async function resetAllPasswords() {
     URL.revokeObjectURL(url);
 
     alert("✅ Password resettate e file scaricato");
-
   } catch (e) {
     console.error(e);
     alert("❌ Errore nel reset password");
@@ -912,6 +912,10 @@ const appLoader = qs("appLoader");
 const addAllBtn = qs("addCreditsAllBtn");
 if (addAllBtn) {
   addAllBtn.onclick = addCreditsToAllUsers;
+}
+const resetBtn = document.getElementById("resetAllPasswordsBtn");
+if (resetBtn) {
+  resetBtn.onclick = resetAllPasswords;
 }
 
 
