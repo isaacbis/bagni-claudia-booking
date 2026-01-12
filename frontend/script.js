@@ -547,8 +547,6 @@ async function refreshCredits() {
 /* ================= FIELDS ================= */
 function renderFields() {
   const s = qs("fieldSelect");
-  if (!s) return; // ✅ FIX BLOCCO LOGIN
-
   s.innerHTML = "";
   STATE.fields.forEach(f => {
     const o = document.createElement("option");
@@ -777,50 +775,6 @@ async function addCreditsToAllUsers() {
     alert("❌ Errore durante l’operazione");
   }
 }
-// ================= RESET MASSIVO PASSWORD (FIX DEFINITIVO) =================
-async function resetAllPasswords() {
-  if (!confirm("⚠️ Reset di MASSA delle password. Continuare?")) return;
-
-  // user gesture valida per download
-  const a = document.createElement("a");
-  a.download = "reset_passwords_bagni_claudia.txt";
-  document.body.appendChild(a);
-
-  try {
-    const res = await api("/admin/users/reset-passwords-all", {
-      method: "POST"
-    });
-
-    if (!res.users || res.users.length === 0) {
-      alert("Nessun utente aggiornato");
-      return;
-    }
-
-    let txt = "USERNAME : PASSWORD\n\n";
-    res.users.forEach(u => {
-      txt += `${u.username} : ${u.password}\n`;
-    });
-
-    const blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-
-    a.href = url;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    await loadUsers();
-    openAdmin("adminUsers");
-
-    alert("✅ Reset completato e file scaricato");
-
-  } catch (e) {
-  console.error("RESET ERROR:", e);
-  alert(
-    "Errore reset password:\n" +
-    JSON.stringify(e, null, 2)
-  );
-}
-
 
 /* ================= GALLERY ================= */
 function renderLoginGallery() {
@@ -921,10 +875,6 @@ const addAllBtn = qs("addCreditsAllBtn");
 if (addAllBtn) {
   addAllBtn.onclick = addCreditsToAllUsers;
 }
-const resetBtn = document.getElementById("resetAllPasswordsBtn");
-if (resetBtn) {
-  resetBtn.onclick = resetAllPasswords;
-}
 
 
   qs("btnAdminGallery").onclick = () => openAdmin("adminGallery");
@@ -963,12 +913,9 @@ loadAll(true)
     hide(qs("logoutBtn"));
     hide(appLoader);
   });
-const userSearch = qs("userSearch");
-if (userSearch) {
-  userSearch.addEventListener("input", e => {
-    renderUsers(e.target.value);
-  });
-}
+qs("userSearch").addEventListener("input", e => {
+  renderUsers(e.target.value);
+});
 
   // 🔁 KEEP SERVER SVEGLIO (Render free)
   setInterval(() => {
