@@ -775,17 +775,11 @@ async function addCreditsToAllUsers() {
     alert("❌ Errore durante l’operazione");
   }
 }
-// ================= RESET MASSIVO PASSWORD =================
-// ================= RESET MASSIVO PASSWORD =================
+// ================= RESET MASSIVO PASSWORD (FIX DEFINITIVO) =================
 async function resetAllPasswords() {
   if (!confirm("⚠️ Reset di MASSA delle password. Continuare?")) return;
 
-  try {
-    // ================= RESET MASSIVO PASSWORD (FIX DOWNLOAD) =================
-async function resetAllPasswords() {
-  if (!confirm("⚠️ Reset di MASSA delle password. Continuare?")) return;
-
-  // 👉 apriamo SUBITO il download (user gesture valida)
+  // user gesture valida per download
   const a = document.createElement("a");
   a.download = "reset_passwords_bagni_claudia.txt";
   document.body.appendChild(a);
@@ -810,8 +804,10 @@ async function resetAllPasswords() {
 
     a.href = url;
     a.click();
-
     URL.revokeObjectURL(url);
+
+    await loadUsers();
+    openAdmin("adminUsers");
 
     alert("✅ Reset completato e file scaricato");
 
@@ -822,7 +818,6 @@ async function resetAllPasswords() {
     document.body.removeChild(a);
   }
 }
-
 
 /* ================= GALLERY ================= */
 function renderLoginGallery() {
