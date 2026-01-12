@@ -547,6 +547,8 @@ async function refreshCredits() {
 /* ================= FIELDS ================= */
 function renderFields() {
   const s = qs("fieldSelect");
+  if (!s) return; // ✅ FIX BLOCCO LOGIN
+
   s.innerHTML = "";
   STATE.fields.forEach(f => {
     const o = document.createElement("option");
