@@ -664,6 +664,40 @@ function renderUsers(filter = "") {
     class="rename-input"
   >
 `;
+async function resetAllPasswords() {
+  if (!confirm("⚠️ Reset di MASSA delle password. Continuare?")) return;
+
+  try {
+    const res = await api("/admin/users/reset-passwords-all", {
+      method: "POST"
+    });
+
+    if (!res.users || res.users.length === 0) {
+      alert("Nessun utente aggiornato");
+      return;
+    }
+
+    let txt = "USERNAME : PASSWORD\n\n";
+    res.users.forEach(u => {
+      txt += `${u.username} : ${u.password}\n`;
+    });
+
+    const blob = new Blob([txt], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "reset_passwords_bagni_claudia.txt";
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+    alert("✅ Password resettate e file scaricato");
+
+  } catch (e) {
+    alert("❌ Errore nel reset password");
+  }
+}
 
 
       // ✏️ CREDITI

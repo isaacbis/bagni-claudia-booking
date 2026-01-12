@@ -476,6 +476,48 @@ router.post("/admin/users/add-credits-all", requireAdmin, async (req, res) => {
 
   res.json({ ok: true, updated: count });
 });
+// =================== ADMIN: RESET MASSIVO PASSWORD ===================
+router.post("/admin/users/reset-passwords-all", requireAdmin, async (req, res) => {
+  const snap = await db.collection("users").get();
+
+  if (snap.empty) {
+    return res.json({ ok: true, users: [] });
+  }
+
+  const results = [];
+  const batch = db.batch();
+
+  function generatePassword() {
+    return Math.random().toString(36).slice(-8) +
+           Math.random().toString(36).slice(-4).toUpperCase();
+  }
+
+  for (const doc of snap.docs) {
+    const username = doc.id;
+
+    // 🔒 saltiamo admin
+    if (username === "admin") continue;
+
+    const plainPassword = generatePassword();
+    const hash = await bcrypt.hash(plainPassword, 10);
+
+    batch.update(doc.ref, {
+      passwordHash: hash
+    });
+
+    results.push({
+      username,
+      password: plainPassword
+    });
+  }
+
+  await batch.commit();
+
+  res.json({
+    ok: true,
+    users: results
+  });
+});
 
 
 export default router;
