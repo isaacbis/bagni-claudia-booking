@@ -449,6 +449,33 @@ if (reserved.includes(newUsername.toLowerCase())) {
 
   res.json({ ok: true });
 });
+// =================== ADMIN: CREDITI A TUTTI ===================
+router.post("/admin/users/add-credits-all", requireAdmin, async (req, res) => {
+  const { amount } = req.body;
+
+  if (typeof amount !== "number" || amount <= 0) {
+    return res.status(400).json({ error: "INVALID_AMOUNT" });
+  }
+
+  const snap = await db.collection("users").get();
+  if (snap.empty) {
+    return res.json({ ok: true, updated: 0 });
+  }
+
+  const batch = db.batch();
+  let count = 0;
+
+  snap.forEach(doc => {
+    batch.update(doc.ref, {
+      credits: FieldValue.increment(amount)
+    });
+    count++;
+  });
+
+  await batch.commit();
+
+  res.json({ ok: true, updated: count });
+});
 
 
 export default router;

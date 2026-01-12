@@ -760,6 +760,21 @@ async function loadUsers() {
   renderUsers();
 }
 
+async function addCreditsToAllUsers() {
+  if (!confirm("Aggiungere 100 crediti a TUTTI gli utenti?")) return;
+
+  try {
+    const res = await api("/admin/users/add-credits-all", {
+      method: "POST",
+      body: JSON.stringify({ amount: 100 })
+    });
+
+    alert(`✅ Crediti aggiunti a ${res.updated} utenti`);
+    loadUsers();
+  } catch (e) {
+    alert("❌ Errore durante l’operazione");
+  }
+}
 
 /* ================= GALLERY ================= */
 function renderLoginGallery() {
@@ -856,6 +871,8 @@ const appLoader = qs("appLoader");
   qs("btnAdminNotes").onclick = () => openAdmin("adminNotes");
   qs("btnAdminFields").onclick = () => openAdmin("adminFields");
   qs("btnAdminUsers").onclick = () => openAdmin("adminUsers");
+qs("addCreditsAllBtn").onclick = addCreditsToAllUsers;
+
   qs("btnAdminGallery").onclick = () => openAdmin("adminGallery");
 
   document.querySelectorAll(".backAdmin")
