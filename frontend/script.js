@@ -812,12 +812,13 @@ async function resetAllPasswords() {
     alert("✅ Reset completato e file scaricato");
 
   } catch (e) {
-    console.error(e);
-    alert("❌ Errore nel reset password");
-  } finally {
-    document.body.removeChild(a);
-  }
+  console.error("RESET ERROR:", e);
+  alert(
+    "Errore reset password:\n" +
+    JSON.stringify(e, null, 2)
+  );
 }
+
 
 /* ================= GALLERY ================= */
 function renderLoginGallery() {
