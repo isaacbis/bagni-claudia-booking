@@ -965,9 +965,12 @@ loadAll(true)
     hide(qs("logoutBtn"));
     hide(appLoader);
   });
-qs("userSearch").addEventListener("input", e => {
-  renderUsers(e.target.value);
-});
+const userSearch = qs("userSearch");
+if (userSearch) {
+  userSearch.addEventListener("input", e => {
+    renderUsers(e.target.value);
+  });
+}
 
   // 🔁 KEEP SERVER SVEGLIO (Render free)
   setInterval(() => {
