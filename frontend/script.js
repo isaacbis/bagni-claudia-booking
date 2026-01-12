@@ -871,7 +871,11 @@ const appLoader = qs("appLoader");
   qs("btnAdminNotes").onclick = () => openAdmin("adminNotes");
   qs("btnAdminFields").onclick = () => openAdmin("adminFields");
   qs("btnAdminUsers").onclick = () => openAdmin("adminUsers");
-qs("addCreditsAllBtn").onclick = addCreditsToAllUsers;
+const addAllBtn = qs("addCreditsAllBtn");
+if (addAllBtn) {
+  addAllBtn.onclick = addCreditsToAllUsers;
+}
+
 
   qs("btnAdminGallery").onclick = () => openAdmin("adminGallery");
 
