@@ -867,3 +867,15 @@ button:active{ transform: scale(.97); }
 .login-card > a {
   margin-bottom: 10px;
 }
+/* ===== LOGIN GALLERY: DIDASCALIA ===== */
+.login-gallery-caption{
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: rgba(255,255,255,.75);
+  text-align: center;
+  max-width: 72px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

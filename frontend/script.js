@@ -782,6 +782,7 @@ function renderLoginGallery() {
   if (!box) return;
 
   box.innerHTML = "";
+
   STATE.gallery.forEach(g => {
     if (!g.url || !g.link) return;
 
@@ -800,6 +801,15 @@ function renderLoginGallery() {
 
     a.appendChild(img);
     wrap.appendChild(a);
+
+    // 👇 DIDASCALIA
+    if (g.caption) {
+      const cap = document.createElement("div");
+      cap.className = "login-gallery-caption";
+      cap.textContent = g.caption;
+      wrap.appendChild(cap);
+    }
+
     box.appendChild(wrap);
   });
 }
