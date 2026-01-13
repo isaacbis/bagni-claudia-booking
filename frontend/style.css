@@ -846,3 +846,22 @@ button:active{ transform: scale(.97); }
   object-fit: contain;   /* ✅ ORA NON TAGLIA */
   display: block;
 }
+/* ===== FIX DEFINITIVO ICONE LOGIN (NO TAGLIO) ===== */
+.login-card {
+  overflow: visible;           /* 🔴 fondamentale */
+}
+
+/* contenitore delle icone */
+.login-card img {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;         /* mai tagliate */
+  vertical-align: middle;
+}
+
+/* spazio corretto sopra il titolo */
+.login-card > img,
+.login-card > a {
+  margin-bottom: 10px;
+}
