@@ -904,3 +904,47 @@ button:active{ transform: scale(.97); }
   object-fit: contain; /* mai tagliata */
   display: block;
 }
+/* ===== LOGIN GALLERY: OMBRA SUL PAVIMENTO ===== */
+.login-gallery-item{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+/* IMMAGINE */
+.login-gallery-item img{
+  width: 48px;                 /* regola qui la dimensione */
+  height: 48px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.45));
+  z-index: 2;
+}
+
+/* DIDASCALIA */
+.login-gallery-caption{
+  font-size: 11px;
+  color: rgba(255,255,255,.85);
+  text-align: center;
+  line-height: 1.1;
+  z-index: 2;
+}
+
+/* OMBRA “SUL PAVIMENTO” */
+.login-gallery-item::after{
+  content: "";
+  position: absolute;
+  top: 54px;                   /* subito sotto immagine + testo */
+  width: 46px;
+  height: 10px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0,0,0,.45) 0%,
+    rgba(0,0,0,.25) 40%,
+    rgba(0,0,0,0) 70%
+  );
+  filter: blur(2px);
+  z-index: 1;
+}
