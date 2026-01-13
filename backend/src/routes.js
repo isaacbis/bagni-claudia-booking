@@ -259,5 +259,27 @@ router.put("/admin/config", requireAdmin, async (req, res) => {
 
   res.json({ ok: true });
 });
+/* =================== METEO (PUBBLICO) =================== */
+router.get("/weather", async (req, res) => {
+  try {
+    // Coordinate Senigallia
+    const lat = 43.716;
+    const lon = 13.217;
+
+    const url =
+      `https://api.open-meteo.com/v1/forecast` +
+      `?latitude=${lat}&longitude=${lon}` +
+      `&daily=weathercode` +
+      `&timezone=Europe/Rome`;
+
+    const r = await fetch(url);
+    const data = await r.json();
+
+    res.json(data);
+  } catch (e) {
+    console.error("Errore meteo", e);
+    res.status(500).json({ error: "WEATHER_ERROR" });
+  }
+});
 
 export default router;
