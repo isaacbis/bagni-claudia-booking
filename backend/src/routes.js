@@ -281,5 +281,75 @@ router.get("/weather", async (req, res) => {
     res.status(500).json({ error: "WEATHER_ERROR" });
   }
 });
+router.put("/admin/notes", requireAdmin, async (req, res) => {
+  const { text } = req.body;
+  await db.collection("admin").doc("notes")
+    .set({ text: text || "" }, { merge: true });
+
+  res.json({ ok: true });
+});
+router.put("/admin/fields", requireAdmin, async (req, res) => {
+  const { fields } = req.body;
+  if (!Array.isArray(fields)) {
+    return res.status(400).json({ error: "BAD_FIELDS" });
+  }
+
+  await db.collection("admin").doc("fields")
+    .set({ fields }, { merge: true });
+
+  res.json({ ok: true });
+});
+router.put("/admin/gallery", requireAdmin, async (req, res) => {
+  const { images } = req.body;
+  if (!Array.isArray(images)) {
+    return res.status(400).json({ error: "BAD_GALLERY" });
+  }
+
+  await db.collection("admin").doc("gallery")
+    .set({ images }, { merge: true });
+
+  res.json({ ok: true });
+});
+router.put("/admin/users/credits", requireAdmin, async (req, res) => {
+  const { username, delta } = req.body;
+  await db.collection("users").doc(username)
+    .update({ credits: FieldValue.increment(Number(delta)) });
+
+  res.json({ ok: true });
+});
+router.post("/admin/users/rename", requireAdmin, async (req, res) => {
+  const { oldUsername, newUsername } = req.body;
+
+  const oldRef = db.collection("users").doc(oldUsername);
+  const snap = await oldRef.get();
+  if (!snap.exists) return res.status(404).json({ error: "USER_NOT_FOUND" });
+
+  await db.collection("users").doc(newUsername).set(snap.data());
+  await oldRef.delete();
+
+  res.json({ ok: true });
+});
+router.put("/admin/users/status", requireAdmin, async (req, res) => {
+  const { username, disabled } = req.body;
+  await db.collection("users").doc(username)
+    .update({ disabled: !!disabled });
+
+  res.json({ ok: true });
+});
+router.post("/admin/users/add-credits-all", requireAdmin, async (req, res) => {
+  const { amount } = req.body;
+
+  const snap = await db.collection("users").get();
+  const batch = db.batch();
+
+  snap.forEach(d => {
+    batch.update(d.ref, {
+      credits: FieldValue.increment(Number(amount))
+    });
+  });
+
+  await batch.commit();
+  res.json({ updated: snap.size });
+});
 
 export default router;
