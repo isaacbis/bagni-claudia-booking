@@ -843,3 +843,23 @@ button:active{ transform: scale(.97); }
   width: 120px;
   margin-top: 4px;
 }
+/* ===== FIX CENTRATURA IMMAGINI LOGIN ===== */
+.login-gallery {
+  display: flex;
+  justify-content: center;
+  align-items: center;          /* 🔹 centro verticale reale */
+  gap: 10px;
+  margin: 14px auto;            /* 🔹 centro il blocco */
+  padding: 6px 0 10px;
+}
+
+.login-gallery-item {
+  display: flex;                /* 🔹 centra il contenuto */
+  align-items: center;
+  justify-content: center;
+}
+
+.login-gallery-item img {
+  display: block;               /* 🔹 elimina offset inline-img */
+  margin: 0 auto;               /* 🔹 centro perfetto */
+}
