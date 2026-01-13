@@ -477,13 +477,8 @@ router.post("/admin/users/add-credits-all", requireAdmin, async (req, res) => {
 
   res.json({ ok: true, updated: count });
 });
-function generatePassword(length = 10) {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-  let pw = "";
-  for (let i = 0; i < length; i++) {
-    pw += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return pw;
+function generatePassword4Digits() {
+  return String(Math.floor(Math.random() * 10000)).padStart(4, "0");
 }
 
 router.post("/admin/users/reset-all", requireAdmin, async (req, res) => {
@@ -501,7 +496,8 @@ router.post("/admin/users/reset-all", requireAdmin, async (req, res) => {
     const username = doc.id;
     if (username === "admin") continue;
 
-    const newPassword = generatePassword();
+    const newPassword = generatePassword4Digits();
+
     const hash = await bcrypt.hash(newPassword, 10);
 
     batch.update(doc.ref, {
