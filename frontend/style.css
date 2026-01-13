@@ -918,3 +918,30 @@ button:active{ transform: scale(.97); }
   max-width: 100%;
   box-sizing: border-box;
 }
+/* ===== HEADER ICONE LOGIN – FIX DEFINITIVO ===== */
+.login-card {
+  position: relative;
+  padding-top: 72px; /* spazio riservato alle icone */
+}
+
+/* contenitore virtuale delle icone */
+.login-card::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 44px;
+  pointer-events: none;
+}
+
+/* icone sopra il titolo */
+.login-card img,
+.login-card svg {
+  position: relative;
+  max-width: 36px;
+  max-height: 36px;
+  margin: 0 6px;
+  vertical-align: middle;
+}
