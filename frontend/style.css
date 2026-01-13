@@ -879,3 +879,28 @@ button:active{ transform: scale(.97); }
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* ===== LOGIN GALLERY: SOLO IMMAGINE (NO RIQUADRO) ===== */
+.login-gallery-item{
+  width: auto;          /* niente box forzato */
+  height: auto;
+  background: none;     /* ❌ via sfondo */
+  border: none;         /* ❌ via bordo */
+  box-shadow: none;     /* ❌ via ombra */
+  filter: none;         /* ❌ via drop-shadow */
+  overflow: visible;   /* l’immagine respira */
+}
+
+/* link trasparente */
+.login-gallery-item a{
+  display: inline-block;
+  background: none;
+  border: none;
+}
+
+/* immagine vera protagonista */
+.login-gallery-item img{
+  width: 48px;          /* ⬅️ regola QUI la dimensione */
+  height: 48px;
+  object-fit: contain; /* mai tagliata */
+  display: block;
+}
