@@ -902,15 +902,17 @@ button:active{ transform: scale(.97); }
     animation: none !important;
   }
 }
-/* ===== OMBRA TESTI LOGIN (GIALLO OPACO) – FIX VISIBILE ===== */
+/* ===== OMBRA DIREZIONALE TESTI LOGIN (LUCE TRAMONTO) ===== */
 
+/* Titolo: Bagni Claudia */
 .login-title{
   text-shadow:
-    0 3px 8px rgba(255,179,71,.45),   /* ombra principale */
-    0 0 2px rgba(255,179,71,.55);    /* alone caldo */
+    4px 3px 10px rgba(255,179,71,.45),  /* ombra principale a destra */
+    1px 1px 2px rgba(255,179,71,.35);   /* rinforzo caldo vicino */
 }
 
+/* Sottotitolo: Prenotazione Campi */
 .login-subtitle{
   text-shadow:
-    0 2px 6px rgba(255,179,71,.35);
+    3px 2px 8px rgba(255,179,71,.30);
 }
