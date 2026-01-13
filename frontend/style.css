@@ -893,30 +893,41 @@ button:active{ transform: scale(.97); }
 }
 
 /* ======================================================
-   OMBRA TIPOGRAFICA A PROIEZIONE (COME IMMAGINE ESEMPIO)
+   LONG SHADOW "COMPATTA" (stile immagine esempio)
+   - ombra uniforme, leggibile, attaccata
+   - angolo basso: molto a destra, poco in basso
    ====================================================== */
 
-/* TITOLO: BAGNI CLAUDIA */
+/* Bagni Claudia */
 .login-title{
+  /* micro bordo/contrasto attaccato alle lettere */
   text-shadow:
-    1px 1px 0 rgba(255,179,71,.9),
-    2px 2px 0 rgba(255,179,71,.85),
-    3px 3px 0 rgba(255,179,71,.8),
-    4px 4px 0 rgba(255,179,71,.75),
-    5px 5px 0 rgba(255,179,71,.7),
-    6px 6px 0 rgba(255,179,71,.65),
-    7px 7px 0 rgba(255,179,71,.6),
-    8px 8px 0 rgba(255,179,71,.55),
-    9px 9px 0 rgba(255,179,71,.5),
-    10px 10px 0 rgba(255,179,71,.45),
-    11px 11px 0 rgba(255,179,71,.4),
-    12px 12px 0 rgba(255,179,71,.35);
+    1px 0px 0 rgba(0,0,0,.18),
+    0px 1px 0 rgba(0,0,0,.18),
+
+    /* proiezione compatta (un solo colore) */
+    2px 1px 0 rgba(0,0,0,.22),
+    4px 2px 0 rgba(0,0,0,.22),
+    6px 3px 0 rgba(0,0,0,.22),
+    8px 4px 0 rgba(0,0,0,.22),
+    10px 5px 0 rgba(0,0,0,.22),
+    12px 6px 0 rgba(0,0,0,.22),
+    14px 7px 0 rgba(0,0,0,.22),
+    16px 8px 0 rgba(0,0,0,.22),
+    18px 9px 0 rgba(0,0,0,.22),
+    20px 10px 0 rgba(0,0,0,.22);
 }
+
+/* Prenotazione Campi (più corta) */
 .login-subtitle{
   text-shadow:
-    1px 1px 0 rgba(255,179,71,.7),
-    2px 2px 0 rgba(255,179,71,.6),
-    3px 3px 0 rgba(255,179,71,.5),
-    4px 4px 0 rgba(255,179,71,.4),
-    5px 5px 0 rgba(255,179,71,.3);
+    1px 0px 0 rgba(0,0,0,.14),
+    0px 1px 0 rgba(0,0,0,.14),
+
+    2px 1px 0 rgba(0,0,0,.18),
+    4px 2px 0 rgba(0,0,0,.18),
+    6px 3px 0 rgba(0,0,0,.18),
+    8px 4px 0 rgba(0,0,0,.18),
+    10px 5px 0 rgba(0,0,0,.18),
+    12px 6px 0 rgba(0,0,0,.18);
 }
