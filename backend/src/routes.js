@@ -6,13 +6,14 @@ import { db, FieldValue } from "./db.js";
 import fs from "fs";
 import path from "path";
 import os from "os";
-import crypto from "crypto";
 
 
 let lastCleanup = 0;
 const CLEANUP_COOLDOWN_MS = 60_000; // 1 minuto
 
 const router = express.Router();
+router.post("/admin/users/reset-all", requireAdmin, async (req, res) => {
+  console.log("RESET ALL USERS TRIGGERED");
 
 /* =================== MIDDLEWARE =================== */
 function requireAuth(req, res, next) {
