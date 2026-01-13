@@ -501,7 +501,6 @@ router.post("/admin/users/reset-all", requireAdmin, async (req, res) => {
   for (const doc of snap.docs) {
     const username = doc.id;
 
-    // ❌ non toccare admin
     if (username === "admin") continue;
 
     const newPassword = generatePassword();
@@ -517,18 +516,14 @@ router.post("/admin/users/reset-all", requireAdmin, async (req, res) => {
 
   await batch.commit();
 
-  // crea file TXT
   const fileName = `users_reset_${new Date().toISOString().slice(0,10)}.txt`;
-  const filePath = path.join(os.tmpdir(), fileName);
 
-  fs.writeFileSync(
-    filePath,
-    lines.join("\n"),
-    "utf8"
+  res.setHeader("Content-Type", "text/plain");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="${fileName}"`
   );
-
-  res.download(filePath, fileName);
+  res.send(lines.join("\n"));
 });
-
 
 export default router;
