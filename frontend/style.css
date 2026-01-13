@@ -314,11 +314,6 @@ button:active{ transform: scale(.97); }
 .error{ color: var(--danger); margin-top: 8px; font-weight: 700; }
 .success{ color: var(--success); margin-top: 8px; font-weight: 700; }
 
-/* ===== Reduce motion support ===== */
-@media (prefers-reduced-motion: reduce){
-  *{ animation:none !important; transition:none !important; }
-  body::before, body::after{ animation:none !important; }
-}
 
 /* ===== FIX: centra la data su mobile ===== */
 @media (max-width: 767px) {
@@ -896,23 +891,86 @@ button:active{ transform: scale(.97); }
 .login-gallery-item{
   will-change: transform, opacity;
 }
-@media (prefers-reduced-motion: reduce){
-  .login-gallery-item,
-  .login-gallery-item::after{
-    animation: none !important;
+
+/* ======================================================
+   OMBRE A PAVIMENTO – TITOLI LOGIN (VERSIONE DEFINITIVA)
+   ====================================================== */
+
+/* TITOLO */
+.login-title{
+  position: relative;
+}
+
+.login-title::after{
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  transform: translateX(-50%) translateX(8px);
+
+  width: 160px;
+  height: 16px;
+
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255,179,71,.45) 0%,
+    rgba(255,179,71,.25) 40%,
+    rgba(255,179,71,.12) 60%,
+    rgba(255,179,71,0) 75%
+  );
+
+  filter: blur(4px);
+  pointer-events: none;
+  z-index: 0;
+
+  animation: sunsetGroundShadow 10s ease-in-out infinite alternate;
+}
+
+/* SOTTOTITOLO */
+.login-subtitle{
+  position: relative;
+}
+
+.login-subtitle::after{
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  transform: translateX(-50%) translateX(6px);
+
+  width: 120px;
+  height: 12px;
+
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255,179,71,.30) 0%,
+    rgba(255,179,71,.18) 45%,
+    rgba(255,179,71,0) 70%
+  );
+
+  filter: blur(3px);
+  pointer-events: none;
+  z-index: 0;
+
+  animation: sunsetGroundShadow 12s ease-in-out infinite alternate;
+}
+
+/* ANIMAZIONE SOLE CHE SCENDE */
+@keyframes sunsetGroundShadow {
+  0% {
+    transform: translateX(-50%) translateX(4px) scaleX(.9);
+    opacity: .35;
+  }
+  100% {
+    transform: translateX(-50%) translateX(10px) scaleX(1.1);
+    opacity: .55;
   }
 }
-/* ===== OMBRA DIREZIONALE TESTI LOGIN (LUCE TRAMONTO) ===== */
 
-/* Titolo: Bagni Claudia */
-.login-title{
-  text-shadow:
-    4px 3px 10px rgba(255,179,71,.45),  /* ombra principale a destra */
-    1px 1px 2px rgba(255,179,71,.35);   /* rinforzo caldo vicino */
-}
-
-/* Sottotitolo: Prenotazione Campi */
-.login-subtitle{
-  text-shadow:
-    3px 2px 8px rgba(255,179,71,.30);
+/* ACCESSIBILITÀ */
+@media (prefers-reduced-motion: reduce){
+  .login-title::after,
+  .login-subtitle::after{
+    animation: none !important;
+  }
 }
