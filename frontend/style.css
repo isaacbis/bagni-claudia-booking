@@ -979,3 +979,47 @@ button:active{ transform: scale(.97); }
   transform: translateY(-2px) scale(1.08);
   transition: transform 180ms cubic-bezier(.25,.9,.3,1.15);
 }
+/* ===== LOGIN GALLERY: OMBRA UNICA A PAVIMENTO ===== */
+.login-gallery-item{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* IMMAGINE */
+.login-gallery-item img{
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+  z-index: 2;
+}
+
+/* DIDASCALIA */
+.login-gallery-caption{
+  font-size: 11px;
+  color: rgba(255,255,255,.85);
+  text-align: center;
+  line-height: 1.1;
+  z-index: 2;
+}
+
+/* OMBRA A TERRA (IMMAGINE + TESTO) */
+.login-gallery-item::after{
+  content: "";
+  position: absolute;
+  bottom: -10px;              /* più “appoggiata” a terra */
+  width: 72px;                /* ombra più larga */
+  height: 18px;               /* più spessore */
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0,0,0,.75) 0%,
+    rgba(0,0,0,.45) 35%,
+    rgba(0,0,0,.18) 55%,
+    rgba(0,0,0,0) 75%
+  );
+  filter: blur(4px);          /* morbida ma presente */
+  z-index: 1;
+}
