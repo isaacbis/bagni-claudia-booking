@@ -320,17 +320,6 @@ button:active{ transform: scale(.97); }
   body::before, body::after{ animation:none !important; }
 }
 
-/* ===== Desktop/tablet ===== */
-@media (min-width: 768px){
-  .wrap{ padding: 24px; }
-  .grid3{ grid-template-columns: repeat(3, 1fr); }
-  button{ width:auto; }
-  .btn{ padding: 12px 22px; }
-  .card{ padding: 20px; }
-  .login-title{ font-size: 40px; }
-  .login-gallery-item{ width: 78px; }
-  .login-gallery-item img{ width: 78px; height: 58px; }
-}
 /* ===== FIX: centra la data su mobile ===== */
 @media (max-width: 767px) {
   .grid3 {
