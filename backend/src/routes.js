@@ -11,9 +11,6 @@ import os from "os";
 let lastCleanup = 0;
 const CLEANUP_COOLDOWN_MS = 60_000; // 1 minuto
 
-const router = express.Router();
-router.post("/admin/users/reset-all", requireAdmin, async (req, res) => {
-  console.log("RESET ALL USERS TRIGGERED");
 
 /* =================== MIDDLEWARE =================== */
 function requireAuth(req, res, next) {
@@ -491,17 +488,18 @@ function generatePassword(length = 10) {
   return pw;
 }
 router.post("/admin/users/reset-all", requireAdmin, async (req, res) => {
+  console.log("RESET ALL USERS TRIGGERED");
+
   const snap = await db.collection("users").get();
   if (snap.empty) {
     return res.status(400).json({ error: "NO_USERS" });
   }
 
-  let lines = [];
   const batch = db.batch();
+  const lines = [];
 
   for (const doc of snap.docs) {
     const username = doc.id;
-
     if (username === "admin") continue;
 
     const newPassword = generatePassword();
