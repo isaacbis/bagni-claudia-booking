@@ -20,7 +20,7 @@
   --radius: 18px;
   --radius-sm: 14px;
 
-  --shadow-lg: 0 22px 55px rgba(0,0,0,.55);
+  --shadow-lg: 0 22px 55px rgba(0,0,0,1);
   --shadow-sm: 0 10px 26px rgba(0,0,0,.45);
 
   --focus: 0 0 0 3px rgba(255,179,71,.22);
