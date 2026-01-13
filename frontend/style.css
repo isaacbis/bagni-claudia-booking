@@ -869,7 +869,7 @@ button:active{ transform: scale(.97); }
 }
 /* ===== LOGIN GALLERY: DIDASCALIA ===== */
 .login-gallery-caption{
-  margin-top: 4px;
+  margin-top: 1px;
   font-size: 11px;
   line-height: 1.2;
   color: rgba(255,255,255,.75);
