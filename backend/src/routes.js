@@ -237,5 +237,27 @@ router.put("/admin/users/password", requireAdmin, async (req, res) => {
     .update({ passwordHash: hash });
   res.json({ ok: true });
 });
+/* =================== ADMIN CONFIG =================== */
+router.put("/admin/config", requireAdmin, async (req, res) => {
+  const schema = z.object({
+    slotMinutes: z.number().min(15).max(180),
+    dayStart: z.string().regex(/^\d{2}:\d{2}$/),
+    dayEnd: z.string().regex(/^\d{2}:\d{2}$/),
+    maxBookingsPerUserPerDay: z.number().min(1).max(10),
+    maxActiveBookingsPerUser: z.number().min(1).max(10)
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "BAD_BODY" });
+  }
+
+  await db
+    .collection("admin")
+    .doc("config")
+    .set(parsed.data, { merge: true });
+
+  res.json({ ok: true });
+});
 
 export default router;
