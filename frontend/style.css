@@ -905,25 +905,25 @@ button:active{ transform: scale(.97); }
   content: "";
   position: absolute;
   left: 50%;
-  bottom: -10px;
-  transform: translateX(-50%) translateX(8px);
+  bottom: -14px;
+  transform: translateX(-50%) translateX(10px);
 
-  width: 160px;
-  height: 16px;
+  width: 190px;
+  height: 5px;                  /* più piatta */
 
   background: radial-gradient(
     ellipse at center,
-    rgba(255,179,71,.45) 0%,
-    rgba(255,179,71,.25) 40%,
-    rgba(255,179,71,.12) 60%,
-    rgba(255,179,71,0) 75%
+    rgba(255,179,71,.75) 0%,     /* nucleo deciso */
+    rgba(255,179,71,.55) 25%,
+    rgba(255,179,71,.25) 45%,
+    rgba(255,179,71,0) 70%
   );
 
-  filter: blur(4px);
-  pointer-events: none;
-  z-index: 0;
+  filter: blur(0.8px);           /* bordo più netto */
+  opacity: .9;
 
   animation: sunsetGroundShadow 10s ease-in-out infinite alternate;
+
 }
 
 /* SOTTOTITOLO */
@@ -935,24 +935,25 @@ button:active{ transform: scale(.97); }
   content: "";
   position: absolute;
   left: 50%;
-  bottom: -8px;
-  transform: translateX(-50%) translateX(6px);
+  bottom: -10px;
+  transform: translateX(-50%) translateX(8px);
 
-  width: 120px;
-  height: 12px;
+  width: 145px;
+  height: 3px;                  /* ancora più piatta */
 
   background: radial-gradient(
     ellipse at center,
-    rgba(255,179,71,.30) 0%,
-    rgba(255,179,71,.18) 45%,
-    rgba(255,179,71,0) 70%
+    rgba(255,179,71,.55) 0%,
+    rgba(255,179,71,.38) 30%,
+    rgba(255,179,71,.18) 55%,
+    rgba(255,179,71,0) 75%
   );
 
-  filter: blur(3px);
-  pointer-events: none;
-  z-index: 0;
+  filter: blur(0.6px);
+  opacity: .8;
 
   animation: sunsetGroundShadow 12s ease-in-out infinite alternate;
+
 }
 
 /* ANIMAZIONE SOLE CHE SCENDE */
