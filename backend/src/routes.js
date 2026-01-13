@@ -3,6 +3,11 @@ import bcrypt from "bcrypt";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { db, FieldValue } from "./db.js";
+import fs from "fs";
+import path from "path";
+import os from "os";
+import crypto from "crypto";
+
 
 let lastCleanup = 0;
 const CLEANUP_COOLDOWN_MS = 60_000; // 1 minuto
@@ -476,41 +481,54 @@ router.post("/admin/users/add-credits-all", requireAdmin, async (req, res) => {
 
   res.json({ ok: true, updated: count });
 });
-// =================== ADMIN: RESET MASSIVO PASSWORD ===================
-router.post(
-  "/admin/users/reset-passwords-all",
-  requireAdmin,
-  async (req, res) => {
-
-    console.log(">>> RESET MASSIVO PASSWORD RICHIESTO DA:", req.session.user);
-
-    const snap = await db.collection("users").get();
-
-    const results = [];
-    const batch = db.batch();
-
-    function generatePassword() {
-      return Math.random().toString(36).slice(-8) +
-             Math.random().toString(36).slice(-4).toUpperCase();
-    }
-
-    for (const doc of snap.docs) {
-      const username = doc.id;
-      if (username === "admin") continue;
-
-      const plainPassword = generatePassword();
-      const hash = await bcrypt.hash(plainPassword, 10);
-
-      batch.update(doc.ref, { passwordHash: hash });
-
-      results.push({ username, password: plainPassword });
-    }
-
-    await batch.commit();
-
-    res.json({ ok: true, users: results });
+function generatePassword(length = 10) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  let pw = "";
+  for (let i = 0; i < length; i++) {
+    pw += chars[Math.floor(Math.random() * chars.length)];
   }
-);
+  return pw;
+}
+router.post("/admin/users/reset-all", requireAdmin, async (req, res) => {
+  const snap = await db.collection("users").get();
+  if (snap.empty) {
+    return res.status(400).json({ error: "NO_USERS" });
+  }
+
+  let lines = [];
+  const batch = db.batch();
+
+  for (const doc of snap.docs) {
+    const username = doc.id;
+
+    // ❌ non toccare admin
+    if (username === "admin") continue;
+
+    const newPassword = generatePassword();
+    const hash = await bcrypt.hash(newPassword, 10);
+
+    batch.update(doc.ref, {
+      passwordHash: hash,
+      disabled: false
+    });
+
+    lines.push(`${username} : ${newPassword}`);
+  }
+
+  await batch.commit();
+
+  // crea file TXT
+  const fileName = `users_reset_${new Date().toISOString().slice(0,10)}.txt`;
+  const filePath = path.join(os.tmpdir(), fileName);
+
+  fs.writeFileSync(
+    filePath,
+    lines.join("\n"),
+    "utf8"
+  );
+
+  res.download(filePath, fileName);
+});
 
 
 export default router;
