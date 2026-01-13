@@ -808,17 +808,6 @@ button:active{ transform: scale(.97); }
   margin: 16px auto;
 }
 
-/* CONTENITORE UNICO */
-.login-gallery-item{
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-
-  animation: landBounce 720ms cubic-bezier(.25,1.2,.35,1) both;
-}
-
 /* IMMAGINE */
 .login-gallery-item img{
   width: 48px;
@@ -888,7 +877,82 @@ button:active{ transform: scale(.97); }
 .login-gallery-item:nth-child(5){ animation-delay: 480ms; }
 .login-gallery-item:nth-child(6){ animation-delay: 600ms; }
 
-.login-gallery-item{
-  will-change: transform, opacity;
+
+@keyframes cardEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
+.login-card{
+  animation: cardEnter 700ms cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes slowGradient {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+
+input{
+  transition: all .25s ease;
+}
+
+input:focus{
+  transform: scale(1.015);
+  box-shadow: 0 0 0 2px rgba(255,179,71,.35);
+}
+button{
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+button:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+}
+
+button:active{
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(0,0,0,.2);
+}
+@keyframes floatIcon {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+
+.login-gallery-item:nth-child(2){ animation-delay: .6s; }
+.login-gallery-item:nth-child(3){ animation-delay: 1.2s; }
+@media (prefers-reduced-motion: reduce){
+  *{
+    animation: none !important;
+    transition: none !important;
+  }
+}
+body{
+  background-size: 200% 200%;
+}
+
+@media (min-width: 768px){
+  body{
+    animation: slowGradient 18s ease-in-out infinite;
+  }
+}
+.login-gallery-item{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  animation:
+    landBounce 720ms cubic-bezier(.25,1.2,.35,1) both,
+    floatIcon 3.5s ease-in-out infinite 900ms;
+
+  will-change: transform, opacity;
+}
