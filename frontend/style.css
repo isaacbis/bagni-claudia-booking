@@ -857,7 +857,7 @@ button:active{ transform: scale(.97); }
   height: 100%;
   display: inline-block;
   width: 48px;
-  height: 60px;
+  height: 30px;
   object-fit: contain;         /* mai tagliate */
   vertical-align: middle;
 }
