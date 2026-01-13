@@ -893,22 +893,30 @@ button:active{ transform: scale(.97); }
 }
 
 /* ======================================================
-   OMBRA TESTUALE SCHIACCIATA A PAVIMENTO
+   OMBRA TIPOGRAFICA A PROIEZIONE (COME IMMAGINE ESEMPIO)
    ====================================================== */
 
-/* TITOLO: Bagni Claudia */
+/* TITOLO: BAGNI CLAUDIA */
 .login-title{
   text-shadow:
-    1px 1px 0 rgba(255,179,71,.85),  /* attaccata */
-    2px 2px 0 rgba(255,179,71,.75),
-    3px 3px 0 rgba(255,179,71,.60),
-    4px 4px 0 rgba(255,179,71,.45); /* schiacciata verso il basso */
+    1px 1px 0 rgba(255,179,71,.9),
+    2px 2px 0 rgba(255,179,71,.85),
+    3px 3px 0 rgba(255,179,71,.8),
+    4px 4px 0 rgba(255,179,71,.75),
+    5px 5px 0 rgba(255,179,71,.7),
+    6px 6px 0 rgba(255,179,71,.65),
+    7px 7px 0 rgba(255,179,71,.6),
+    8px 8px 0 rgba(255,179,71,.55),
+    9px 9px 0 rgba(255,179,71,.5),
+    10px 10px 0 rgba(255,179,71,.45),
+    11px 11px 0 rgba(255,179,71,.4),
+    12px 12px 0 rgba(255,179,71,.35);
 }
-
-/* SOTTOTITOLO: Prenotazione Campi */
 .login-subtitle{
   text-shadow:
-    1px 1px 0 rgba(255,179,71,.60),
-    2px 2px 0 rgba(255,179,71,.45),
-    3px 3px 0 rgba(255,179,71,.30);
+    1px 1px 0 rgba(255,179,71,.7),
+    2px 2px 0 rgba(255,179,71,.6),
+    3px 3px 0 rgba(255,179,71,.5),
+    4px 4px 0 rgba(255,179,71,.4),
+    5px 5px 0 rgba(255,179,71,.3);
 }
