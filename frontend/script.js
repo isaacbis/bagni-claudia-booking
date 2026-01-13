@@ -214,6 +214,7 @@ async function login() {
     qs("username").classList.remove("input-error");
     qs("password").classList.remove("input-error");
   }, 400);
+  }
 }
 
 async function logout() {
