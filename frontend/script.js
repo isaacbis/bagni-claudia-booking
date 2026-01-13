@@ -204,17 +204,29 @@ async function login() {
     });
     location.reload(); // 🔁 lascia che sia INIT a fare loadAll
   } catch {
-    qs("loginErr").textContent = "Login fallito";
-    show(qs("loginErr"));
-  }
+  qs("loginErr").textContent = "Login fallito";
+  show(qs("loginErr"));
+
+  qs("username").classList.add("input-error");
+  qs("password").classList.add("input-error");
+
+  setTimeout(() => {
+    qs("username").classList.remove("input-error");
+    qs("password").classList.remove("input-error");
+  }, 400);
 }
+
 async function logout() {
   await api("/logout", { method: "POST" });
+qs("loginBox").classList.add("login-success");
+
   location.reload();
 }
 
 /* ================= LOAD BASE ================= */
 async function loadAll(setDateToday = false) {
+show(qs("skeleton"));
+
   STATE.me = await api("/me");
   const pub = await api("/public/config");
 
@@ -260,6 +272,8 @@ if (STATE.fields.length > 0) {
   }
 
   await loadReservations();
+hide(qs("skeleton"));
+
 
 }
 

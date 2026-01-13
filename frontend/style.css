@@ -956,3 +956,45 @@ body{
 
   will-change: transform, opacity;
 }
+/* ================= SKELETON LOADER ================= */
+.skeleton{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sk-line{
+  height: 14px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,.08),
+    rgba(255,255,255,.18),
+    rgba(255,255,255,.08)
+  );
+  background-size: 200% 100%;
+  animation: skMove 1.4s ease-in-out infinite;
+}
+
+.sk-line.title{ height: 22px; width: 60%; }
+.sk-line.small{ width: 40%; }
+
+@keyframes skMove{
+  0%{ background-position: 200% 0; }
+  100%{ background-position: -200% 0; }
+}
+/* ================= LOGIN FEEDBACK ================= */
+@keyframes shake{
+  0%,100%{ transform: translateX(0); }
+  25%{ transform: translateX(-6px); }
+  75%{ transform: translateX(6px); }
+}
+
+.input-error{
+  border-color: #ff6b6b !important;
+  animation: shake .3s ease;
+}
+
+.login-success{
+  animation: popIn .35s var(--ease);
+}
