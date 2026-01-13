@@ -900,3 +900,21 @@ button:active{ transform: scale(.97); }
 .login-gallery-item img:hover{
   transform: scale(1.06);       /* puoi tenere l'effetto */
 }
+/* ===== FIX: icone login devono rientrare nella card ===== */
+.login-card {
+  position: relative;
+  overflow: hidden; /* 🔴 fondamentale */
+}
+
+/* contenitore icone (qualsiasi img/svg sopra il titolo) */
+.login-card img,
+.login-card svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* se le icone sono assolute o inline */
+.login-card > * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
