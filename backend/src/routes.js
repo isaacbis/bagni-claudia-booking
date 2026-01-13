@@ -3,13 +3,11 @@ import bcrypt from "bcrypt";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { db, FieldValue } from "./db.js";
-import fs from "fs";
-import path from "path";
-import os from "os";
-
 
 let lastCleanup = 0;
 const CLEANUP_COOLDOWN_MS = 60_000; // 1 minuto
+
+const router = express.Router();
 
 
 /* =================== MIDDLEWARE =================== */
@@ -487,6 +485,7 @@ function generatePassword(length = 10) {
   }
   return pw;
 }
+
 router.post("/admin/users/reset-all", requireAdmin, async (req, res) => {
   console.log("RESET ALL USERS TRIGGERED");
 
@@ -524,5 +523,4 @@ router.post("/admin/users/reset-all", requireAdmin, async (req, res) => {
   );
   res.send(lines.join("\n"));
 });
-
 export default router;
