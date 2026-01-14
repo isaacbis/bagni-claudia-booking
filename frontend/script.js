@@ -292,9 +292,7 @@ if (STATE.fields.length > 0) {
 qs("addRangeBtn").onclick = () => addOpenRange();
 
     qs("cfgMaxPerDay").value = pub.maxBookingsPerUserPerDay;
-qs("cfgMaxPerWeek").value = pub.maxBookingsPerUserPerWeek || 3;
-qs("cfgMaxActive").value = pub.maxActiveBookingsPerUser;
-
+    qs("cfgMaxActive").value = pub.maxActiveBookingsPerUser;
     qs("notesText").value = STATE.notes;
     renderFieldsAdmin();
     renderGalleryAdmin();
@@ -426,31 +424,28 @@ STATE.config.openRanges.forEach(r => {
       o.disabled = true;
     }
     else {
-  const mTime = minutes(t);
-  const date = qs("datePick").value;
+      const mTime = minutes(t);
+      const date = qs("datePick").value;
 
-  const isClosed = STATE.closedSlots.some(c => {
-    if (c.fieldId !== "*" && c.fieldId !== field) return false;
-    if (date < c.startDate || date > c.endDate) return false;
+      const isClosed = STATE.closedSlots.some(c => {
+        if (c.fieldId !== "*" && c.fieldId !== field) return false;
+        if (date < c.startDate || date > c.endDate) return false;
 
-    const from = minutes(c.startTime);
-    const to = minutes(c.endTime);
-    return mTime >= from && mTime < to;
-  });
+        const from = minutes(c.startTime);
+        const to = minutes(c.endTime);
+        return mTime >= from && mTime < to;
+      });
 
-  if (isClosed) {
-    o.disabled = true;
-    o.textContent = `${t} ⛔ Chiuso`;
-  } else {
-    o.textContent = `${t} ✅ Libero`;
-  }
-}
+      // ⛔ chiuso → NON MOSTRARLO
+      if (isClosed) return;
 
+      o.textContent = `${t} ✅ Libero`;
+    }
 
     sel.appendChild(o);
   }
 });
-}
+
 
 function renderTimeline(fieldId) {
   const slotMinutes = STATE.config.slotMinutes || 45;
@@ -488,7 +483,6 @@ if (isClosed) return; // 👈 SLOT NASCOSTO
       slots.push(el);
     }
   });
-
 
   // se non ci sono slot → niente marker
   if (slots.length === 0) return;

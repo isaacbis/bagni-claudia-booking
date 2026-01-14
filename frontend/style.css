@@ -89,7 +89,7 @@ body::after{
 .brand{
   font-family: 'Montserrat', sans-serif;
   font-weight: 300;
-  font-size: clamp(16px, 4.5vw, 20px); /* 👈 SCALA AUTOMATICA */
+  font-size: clamp(16px, 4.5vw, 20px);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #ffffff;
@@ -97,7 +97,7 @@ body::after{
 }
 
 .brand-claudia{
-  font-weight: 600;   /* solo Claudia più forte */
+  font-weight: 600;
   letter-spacing: 0.08em;
 }
 
@@ -707,6 +707,7 @@ button:active{ transform: scale(.97); }
   border: 1px solid rgba(255,255,255,0.1);
   padding: 6px;
 }
+
 /* ================= LOADER ANIMATO ================= */
 .app-loader {
   position: fixed;

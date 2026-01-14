@@ -78,10 +78,6 @@ async function cleanupExpiredReservations() {
 
   await batch.commit();
 }
-function minutes(t) {
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + m;
-}
 
 /* =================== AUTH =================== */
 router.post("/login", loginLimiter, async (req, res) => {
@@ -139,12 +135,11 @@ router.get("/public/config", async (req, res) => {
   const cfg = cfgSnap.exists ? cfgSnap.data() : {};
 
   res.json({
-  slotMinutes: Number(cfg.slotMinutes || 45),
-  openRanges: cfg.openRanges || [
-    { start: "09:00", end: "20:00" }
-  ],
-  maxBookingsPerUserPerDay: Number(cfg.maxBookingsPerUserPerDay || 1),
-  maxActiveBookingsPerUser: Number(cfg.maxActiveBookingsPerUser || 1),
+    slotMinutes: Number(cfg.slotMinutes || 45),
+    dayStart: cfg.dayStart || "09:00",
+    dayEnd: cfg.dayEnd || "20:00",
+    maxBookingsPerUserPerDay: Number(cfg.maxBookingsPerUserPerDay || 1),
+    maxActiveBookingsPerUser: Number(cfg.maxActiveBookingsPerUser || 1),
     fields: fieldsSnap.exists ? (fieldsSnap.data().fields || []) : [],
     notesText: notesSnap.exists ? (notesSnap.data().text || "") : "",
     gallery: gallerySnap.exists ? (gallerySnap.data().images || []) : []
@@ -182,22 +177,8 @@ router.post("/reservations", requireAuth, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: "BAD_BODY" });
 
   const { fieldId, date, time } = parsed.data;
-const username = req.session.user.username;
-const isAdmin = req.session.user.role === "admin";
-
-// ===== CONTROLLO CREDITI (OBBLIGATORIO) =====
-if (!isAdmin) {
-  const userSnap = await db.collection("users").doc(username).get();
-  const user = userSnap.exists ? userSnap.data() : {};
-
-  if ((user.credits ?? 0) <= 0) {
-    return res.status(400).json({
-      error: "NO_CREDITS"
-    });
-  }
-}
-
-
+  const username = req.session.user.username;
+  const isAdmin = req.session.user.role === "admin";
 
 // ================= LIMITI PRENOTAZIONE GIORNALIERI =================
 if (!isAdmin) {
@@ -205,10 +186,7 @@ if (!isAdmin) {
   const cfg = cfgSnap.exists ? cfgSnap.data() : {};
 
   const maxPerDay = Number(cfg.maxBookingsPerUserPerDay || 1);
-  const maxPerWeek = Number(cfg.maxBookingsPerUserPerWeek || 3);
-  const maxActive = Number(cfg.maxActiveBookingsPerUser || 1);
 
-  // ===== LIMITE GIORNALIERO =====
   const sameDaySnap = await db
     .collection("reservations")
     .where("date", "==", date)
@@ -216,68 +194,9 @@ if (!isAdmin) {
     .get();
 
   if (sameDaySnap.size >= maxPerDay) {
-    return res.status(400).json({ error: "MAX_PER_DAY_LIMIT" });
-  }
-
-  // ===== LIMITE SETTIMANALE =====
-  const startOfWeek = new Date(date);
-  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-  const weekSnap = await db
-    .collection("reservations")
-    .where("user", "==", username)
-    .where("date", ">=", startOfWeek.toISOString().slice(0, 10))
-    .where("date", "<=", endOfWeek.toISOString().slice(0, 10))
-    .get();
-
-  if (weekSnap.size >= maxPerWeek) {
-    return res.status(400).json({ error: "MAX_PER_WEEK_LIMIT" });
-  }
-
-  // ===== LIMITE PRENOTAZIONI ATTIVE =====
-  const today = localISODate();
-  const activeSnap = await db
-    .collection("reservations")
-    .where("user", "==", username)
-    .where("date", ">", today)
-    .get();
-
-  if (activeSnap.size >= maxActive) {
-    return res.status(400).json({ error: "ACTIVE_BOOKING_LIMIT" });
-  }
-}
-
-// ================= CHIUSURE ORARIE SU PERIODO =================
-if (!isAdmin) {
-  const snap = await db
-    .collection("admin")
-    .doc("closedSlots")
-    .collection("slots")
-    .get();
-
-  const reqMin = minutes(time);
-
-
-  for (const d of snap.docs) {
-    const c = d.data();
-
-    // campo specifico o tutti
-    if (c.fieldId !== "*" && c.fieldId !== fieldId) continue;
-
-    // data fuori intervallo
-    if (date < c.startDate || date > c.endDate) continue;
-
-   const from = minutes(c.startTime);
-const to = minutes(c.endTime);
-
-    if (reqMin >= from && reqMin < to) {
-      return res.status(400).json({
-        error: "FIELD_CLOSED_TIME",
-        reason: c.reason || "Campo chiuso in questo orario"
-      });
-    }
+    return res.status(400).json({
+      error: "MAX_PER_DAY_LIMIT"
+    });
   }
 }
 
@@ -342,19 +261,12 @@ router.put("/admin/users/password", requireAdmin, async (req, res) => {
 /* =================== ADMIN CONFIG =================== */
 router.put("/admin/config", requireAdmin, async (req, res) => {
   const schema = z.object({
-  slotMinutes: z.number().min(15).max(180),
-  openRanges: z.array(
-    z.object({
-      start: z.string().regex(/^\d{2}:\d{2}$/),
-      end: z.string().regex(/^\d{2}:\d{2}$/)
-    })
-  ),
-  maxBookingsPerUserPerDay: z.number().min(1).max(10),
-  maxBookingsPerUserPerWeek: z.number().min(1).max(20), // 👈 AGGIUNGI
-  maxActiveBookingsPerUser: z.number().min(1).max(10)
-});
-
-
+    slotMinutes: z.number().min(15).max(180),
+    dayStart: z.string().regex(/^\d{2}:\d{2}$/),
+    dayEnd: z.string().regex(/^\d{2}:\d{2}$/),
+    maxBookingsPerUserPerDay: z.number().min(1).max(10),
+    maxActiveBookingsPerUser: z.number().min(1).max(10)
+  });
 
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) {
@@ -460,71 +372,6 @@ router.post("/admin/users/add-credits-all", requireAdmin, async (req, res) => {
   await batch.commit();
   res.json({ updated: snap.size });
 });
-
-/* =================== CLOSED SLOTS (CHIUSURE ORARIE) =================== */
-
-// ADMIN: lista chiusure orarie
-router.get("/admin/closed-slots", requireAdmin, async (req, res) => {
-  const snap = await db
-    .collection("admin")
-    .doc("closedSlots")
-    .collection("slots")
-    .orderBy("createdAt", "desc")
-    .get();
-
-  const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  res.json({ items });
-});
-
-// ADMIN: aggiungi chiusura oraria
-router.post("/admin/closed-slots", requireAdmin, async (req, res) => {
-  const schema = z.object({
-    fieldId: z.string().min(1),
-    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    startTime: z.string().regex(/^\d{2}:\d{2}$/),
-    endTime: z.string().regex(/^\d{2}:\d{2}$/),
-    reason: z.string().optional()
-  });
-
-  const parsed = schema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "BAD_BODY" });
-
-  const data = parsed.data;
-
-  // check range logico
-  if (data.startDate > data.endDate) {
-    return res.status(400).json({ error: "INVALID_RANGE" });
-  }
-  if (timeToMinutes(data.startTime) >= timeToMinutes(data.endTime)) {
-    return res.status(400).json({ error: "INVALID_TIME_RANGE" });
-  }
-
-  await db
-    .collection("admin")
-    .doc("closedSlots")
-    .collection("slots")
-    .add({
-      ...data,
-      createdAt: FieldValue.serverTimestamp()
-    });
-
-  res.json({ ok: true });
-});
-
-// ADMIN: elimina chiusura oraria
-router.delete("/admin/closed-slots/:id", requireAdmin, async (req, res) => {
-  await db
-    .collection("admin")
-    .doc("closedSlots")
-    .collection("slots")
-    .doc(req.params.id)
-    .delete();
-
-  res.json({ ok: true });
-});
-
-
 /* =================== CLOSED DAYS =================== */
 
 // PUBLIC: giorni chiusi
@@ -538,19 +385,6 @@ router.get("/public/closed-days", async (req, res) => {
   const days = snap.docs.map(d => d.id);
   res.json({ days });
 });
-
-// PUBLIC: chiusure orarie
-router.get("/public/closed-slots", async (req, res) => {
-  const snap = await db
-    .collection("admin")
-    .doc("closedSlots")
-    .collection("slots")
-    .get();
-
-  const items = snap.docs.map(d => d.data());
-  res.json({ items });
-});
-
 
 // ADMIN: chiudi giorno
 router.post("/admin/closed-days", requireAdmin, async (req, res) => {
