@@ -167,29 +167,43 @@ router.get("/reservations", requireAuth, async (req, res) => {
 
 router.post("/reservations", requireAuth, async (req, res) => {
   const { fieldId, date, time } = req.body;
-  const username = req.user.username;
 
-  // 🔹 carica config
-  const cfgSnap = await db.collection("config").doc("public").get();
-  const cfg = cfgSnap.data() || {};
+  // ✅ utente corretto (session)
+  const username = req.session.user.username;
+
+  // ✅ valida data/ora base
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ""))) {
+    return res.status(400).json({ error: "BAD_DATE" });
+  }
+  if (!/^\d{2}:\d{2}$/.test(String(time || ""))) {
+    return res.status(400).json({ error: "BAD_TIME" });
+  }
+  if (!fieldId) {
+    return res.status(400).json({ error: "BAD_FIELD" });
+  }
+
+  // ✅ carica config dal posto giusto
+  const cfgSnap = await db.collection("admin").doc("config").get();
+  const cfg = cfgSnap.exists ? cfgSnap.data() : {};
 
   const maxPerDay = Number(cfg.maxBookingsPerUserPerDay || 1);
   const maxActive = Number(cfg.maxActiveBookingsPerUser || 1);
 
-  // 🔹 prenotazioni attive dell’utente
+  // ✅ usa la tua localISODate() (timezone ok)
+  const today = localISODate();
+
+  // 🔹 prenotazioni attive future (>= oggi)
   const activeSnap = await db
     .collection("reservations")
     .where("user", "==", username)
-    .where("date", ">=", new Date().toISOString().slice(0, 10))
+    .where("date", ">=", today)
     .get();
 
   if (activeSnap.size >= maxActive) {
-    return res.status(400).json({
-      error: "ACTIVE_BOOKING_LIMIT"
-    });
+    return res.status(400).json({ error: "ACTIVE_BOOKING_LIMIT" });
   }
 
-  // 🔹 prenotazioni dell’utente in quel giorno
+  // 🔹 prenotazioni in quel giorno
   const daySnap = await db
     .collection("reservations")
     .where("user", "==", username)
@@ -197,18 +211,27 @@ router.post("/reservations", requireAuth, async (req, res) => {
     .get();
 
   if (daySnap.size >= maxPerDay) {
-    return res.status(400).json({
-      error: "MAX_PER_DAY_LIMIT"
-    });
+    return res.status(400).json({ error: "MAX_PER_DAY_LIMIT" });
   }
 
-  // 🔹 salva prenotazione
+  // 🔹 impedisci doppia prenotazione stesso slot/campo
+  const clash = await db
+    .collection("reservations")
+    .where("date", "==", date)
+    .where("fieldId", "==", fieldId)
+    .where("time", "==", time)
+    .get();
+
+  if (!clash.empty) {
+    return res.status(400).json({ error: "SLOT_TAKEN" });
+  }
+
   await db.collection("reservations").add({
     fieldId,
     date,
     time,
     user: username,
-    createdAt: new Date().toISOString()
+    createdAt: FieldValue.serverTimestamp()
   });
 
   res.json({ ok: true });
