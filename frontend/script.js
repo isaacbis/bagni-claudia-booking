@@ -37,7 +37,7 @@ function startAutoRefresh() {
       // se la sessione è scaduta o il server dorme, non blocchiamo la UI
       console.warn("Auto-refresh fallito", e);
     }
-  }, 5_000);
+  }, 2_000);
 }
 
 function stopAutoRefresh() {
@@ -1033,6 +1033,16 @@ loadAll(true)
   });
 qs("userSearch").addEventListener("input", e => {
   renderUsers(e.target.value);
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    loadReservations();
+  }
+});
+
+window.addEventListener("focus", () => {
+  loadReservations();
 });
 
   // 🔁 KEEP SERVER SVEGLIO (Render free)
