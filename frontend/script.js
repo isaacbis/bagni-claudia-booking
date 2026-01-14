@@ -450,7 +450,7 @@ STATE.config.openRanges.forEach(r => {
     sel.appendChild(o);
   }
 });
-
+}
 
 function renderTimeline(fieldId) {
   const slotMinutes = STATE.config.slotMinutes || 45;
@@ -488,6 +488,7 @@ if (isClosed) return; // 👈 SLOT NASCOSTO
       slots.push(el);
     }
   });
+
 
   // se non ci sono slot → niente marker
   if (slots.length === 0) return;
