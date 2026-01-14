@@ -402,6 +402,71 @@ router.post("/admin/users/add-credits-all", requireAdmin, async (req, res) => {
   await batch.commit();
   res.json({ updated: snap.size });
 });
+
+/* =================== CLOSED SLOTS (CHIUSURE ORARIE) =================== */
+
+// ADMIN: lista chiusure orarie
+router.get("/admin/closed-slots", requireAdmin, async (req, res) => {
+  const snap = await db
+    .collection("admin")
+    .doc("closedSlots")
+    .collection("slots")
+    .orderBy("createdAt", "desc")
+    .get();
+
+  const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  res.json({ items });
+});
+
+// ADMIN: aggiungi chiusura oraria
+router.post("/admin/closed-slots", requireAdmin, async (req, res) => {
+  const schema = z.object({
+    fieldId: z.string().min(1),
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    startTime: z.string().regex(/^\d{2}:\d{2}$/),
+    endTime: z.string().regex(/^\d{2}:\d{2}$/),
+    reason: z.string().optional()
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "BAD_BODY" });
+
+  const data = parsed.data;
+
+  // check range logico
+  if (data.startDate > data.endDate) {
+    return res.status(400).json({ error: "INVALID_RANGE" });
+  }
+  if (timeToMinutes(data.startTime) >= timeToMinutes(data.endTime)) {
+    return res.status(400).json({ error: "INVALID_TIME_RANGE" });
+  }
+
+  await db
+    .collection("admin")
+    .doc("closedSlots")
+    .collection("slots")
+    .add({
+      ...data,
+      createdAt: FieldValue.serverTimestamp()
+    });
+
+  res.json({ ok: true });
+});
+
+// ADMIN: elimina chiusura oraria
+router.delete("/admin/closed-slots/:id", requireAdmin, async (req, res) => {
+  await db
+    .collection("admin")
+    .doc("closedSlots")
+    .collection("slots")
+    .doc(req.params.id)
+    .delete();
+
+  res.json({ ok: true });
+});
+
+
 /* =================== CLOSED DAYS =================== */
 
 // PUBLIC: giorni chiusi

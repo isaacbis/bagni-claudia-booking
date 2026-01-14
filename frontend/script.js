@@ -1007,20 +1007,26 @@ async function loadClosedSlots() {
 }
 
 qs("addClosedSlotBtn").onclick = async () => {
-  await api("/admin/closed-slots", {
-    method: "POST",
-    body: JSON.stringify({
-      fieldId: qs("closedSlotField").value,
-      startDate: qs("closedSlotStartDate").value,
-      endDate: qs("closedSlotEndDate").value,
-      startTime: qs("closedSlotStartTime").value,
-      endTime: qs("closedSlotEndTime").value,
-      reason: qs("closedSlotReason").value
-    })
-  });
+  try {
+    await api("/admin/closed-slots", {
+      method: "POST",
+      body: JSON.stringify({
+        fieldId: qs("closedSlotField").value,
+        startDate: qs("closedSlotStartDate").value,
+        endDate: qs("closedSlotEndDate").value,
+        startTime: qs("closedSlotStartTime").value,
+        endTime: qs("closedSlotEndTime").value,
+        reason: qs("closedSlotReason").value
+      })
+    });
 
-  loadClosedSlots();
+    await loadClosedSlots();
+    alert("Chiusura oraria salvata ✅");
+  } catch (e) {
+    alert(`Errore salvataggio ❌ (${e?.error || "UNKNOWN"})`);
+  }
 };
+
 
 
 /* ================= ADMIN NAV ================= */
