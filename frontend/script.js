@@ -476,6 +476,8 @@ async function book() {
   const date = qs("datePick").value;
   const time = qs("timeSelect").value;
 
+stopAutoRefresh();
+
   // ❌ BLOCCO GIORNI PASSATI
   if (isPastDate(date)) {
   qs("bookMsg").textContent = "❌ Non puoi prenotare un giorno passato";
@@ -524,6 +526,8 @@ try {
   try {
     await loadReservations();
   } catch {}
+
+  startAutoRefresh(); 
 
   qs("bookBtn").disabled = false;
   qs("bookBtn").textContent = "Prenota";
