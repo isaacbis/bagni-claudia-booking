@@ -180,6 +180,32 @@ router.post("/reservations", requireAuth, async (req, res) => {
   const username = req.session.user.username;
   const isAdmin = req.session.user.role === "admin";
 
+  const id = `${fieldId}_${date}_${time}`;
+  const ref = db.collection("reservations").doc(id);
+  if ((await ref.get()).exists) {
+    return res.status(409).json({ error: "SLOT_TAKEN" });
+  }
+
+  await ref.set({
+    fieldId,
+    date,
+    time,
+    user: username,
+    createdAt: FieldValue.serverTimestamp()
+  });
+
+  if (!isAdmin) {
+    await db.collection("users").doc(username)
+      .update({ credits: FieldValue.increment(-1) });
+  }
+
+  res.json({ ok: true });
+});
+
+  const { fieldId, date, time } = parsed.data;
+  const username = req.session.user.username;
+  const isAdmin = req.session.user.role === "admin";
+
 // ================= LIMITI PRENOTAZIONE GIORNALIERI =================
 if (!isAdmin) {
   const cfgSnap = await db.collection("admin").doc("config").get();
