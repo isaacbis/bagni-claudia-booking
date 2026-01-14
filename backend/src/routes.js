@@ -173,6 +173,35 @@ router.post("/reservations", requireAuth, async (req, res) => {
     date: z.string(),
     time: z.string()
   });
+
+  // ===== LIMITI PRENOTAZIONI UTENTE =====
+  const cfgSnap = await db.collection("admin").doc("config").get();
+  const cfg = cfgSnap.exists ? cfgSnap.data() : {};
+
+  const maxPerDay = Number(cfg.maxBookingsPerUserPerDay || 1);
+  const maxActive = Number(cfg.maxActiveBookingsPerUser || 1);
+
+  // prenotazioni attive dell’utente
+  const activeSnap = await db
+    .collection("reservations")
+    .where("user", "==", username)
+    .get();
+
+  if (!isAdmin && activeSnap.size >= maxActive) {
+    return res.status(403).json({ error: "ACTIVE_BOOKING_LIMIT" });
+  }
+
+  // prenotazioni dell’utente per quel giorno
+  const daySnap = await db
+    .collection("reservations")
+    .where("user", "==", username)
+    .where("date", "==", date)
+    .get();
+
+  if (!isAdmin && daySnap.size >= maxPerDay) {
+    return res.status(403).json({ error: "MAX_PER_DAY_LIMIT" });
+  }
+
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "BAD_BODY" });
 
