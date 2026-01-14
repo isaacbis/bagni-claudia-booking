@@ -202,53 +202,6 @@ router.post("/reservations", requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
-  const { fieldId, date, time } = parsed.data;
-  const username = req.session.user.username;
-  const isAdmin = req.session.user.role === "admin";
-
-// ================= LIMITI PRENOTAZIONE GIORNALIERI =================
-if (!isAdmin) {
-  const cfgSnap = await db.collection("admin").doc("config").get();
-  const cfg = cfgSnap.exists ? cfgSnap.data() : {};
-
-  const maxPerDay = Number(cfg.maxBookingsPerUserPerDay || 1);
-
-  const sameDaySnap = await db
-    .collection("reservations")
-    .where("date", "==", date)
-    .where("user", "==", username)
-    .get();
-
-  if (sameDaySnap.size >= maxPerDay) {
-    return res.status(400).json({
-      error: "MAX_PER_DAY_LIMIT"
-    });
-  }
-}
-
-
-  const id = `${fieldId}_${date}_${time}`;
-  const ref = db.collection("reservations").doc(id);
-  if ((await ref.get()).exists) {
-    return res.status(409).json({ error: "SLOT_TAKEN" });
-  }
-
-  await ref.set({
-    fieldId,
-    date,
-    time,
-    user: username,
-    createdAt: FieldValue.serverTimestamp()
-  });
-
-  if (!isAdmin) {
-    await db.collection("users").doc(username)
-      .update({ credits: FieldValue.increment(-1) });
-  }
-
-  res.json({ ok: true });
-});
-
 router.delete("/reservations/:id", requireAuth, async (req, res) => {
   const snap = await db.collection("reservations").doc(req.params.id).get();
   if (!snap.exists) return res.json({ ok: true });
@@ -442,40 +395,6 @@ router.delete("/admin/closed-days/:date", requireAdmin, async (req, res) => {
     .doc(req.params.date)
     .delete();
 
-  res.json({ ok: true });
-});
-// ADMIN: chiudi periodo (es. ferie)
-router.post("/admin/closed-days/range", requireAdmin, async (req, res) => {
-  const { startDate, endDate, reason } = req.body;
-
-  if (
-    !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(endDate)
-  ) {
-    return res.status(400).json({ error: "BAD_DATE" });
-  }
-
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-
-  if (start > end) {
-    return res.status(400).json({ error: "INVALID_RANGE" });
-  }
-
-  const batch = db.batch();
-  const ref = db.collection("admin").doc("closedDays").collection("days");
-
-  let d = new Date(start);
-  while (d <= end) {
-    const iso = d.toISOString().slice(0, 10);
-    batch.set(ref.doc(iso), {
-      reason: reason || "Chiusura",
-      createdAt: FieldValue.serverTimestamp()
-    });
-    d.setDate(d.getDate() + 1);
-  }
-
-  await batch.commit();
   res.json({ ok: true });
 });
 

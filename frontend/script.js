@@ -249,7 +249,7 @@ STATE.closedDays = closed.days || [];
   qs("welcome").textContent = `Ciao ${STATE.me.username}`;
   qs("creditsBox").textContent = `Crediti: ${STATE.me.credits}`;
   qs("roleBadge").textContent = STATE.me.role;
-qs("notesView").innerText = STATE.notes || "Nessuna comunicazione.";
+  qs("notesView").textContent = STATE.notes || "Nessuna comunicazione.";
 
   if (setDateToday || !qs("datePick").value) {
     qs("datePick").value = localISODate();
@@ -642,8 +642,7 @@ async function saveNotes() {
   });
 
   STATE.notes = qs("notesText").value;
-  qs("notesView").innerText = STATE.notes || "Nessuna comunicazione.";
-
+  qs("notesView").textContent = STATE.notes || "Nessuna comunicazione.";
 
   alert("Note aggiornate ✅");
 }
