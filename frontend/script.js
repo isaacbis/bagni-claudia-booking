@@ -1137,31 +1137,35 @@ if (btnAdminClosedSlots) {
   // login gallery pubblica
   loadPublicLoginGallery();
 
-  // avvio APP
-loadAll(true)
-  .then(() => {
+  (async () => {
+  try {
+    // 🔍 verifica sessione
+    STATE.me = await api("/me");
+
+    // ✅ SE OK → carica app
+    hide(qs("loginBox"));
+    show(qs("app"));
+    show(qs("logoutBtn"));
+
+    await loadAll(true);
     loadWeather();
-
-
     startAutoRefresh();
-  if (appLoader) {
-  appLoader.classList.add("hide");
-  setTimeout(() => appLoader.remove(), 450);
-}
-  })
-  .catch(err => {
-    console.warn("INIT ERROR (non loggato)", err);
 
-    // 👉 MOSTRA LOGIN, NASCONDE APP E LOADER
+  } catch {
+    // ❌ NON loggato → mostra login
     show(qs("loginBox"));
     hide(qs("app"));
     hide(qs("logoutBtn"));
+  } finally {
+    // 🔄 chiudi SEMPRE il loader
+    const appLoader = qs("appLoader");
     if (appLoader) {
-  appLoader.classList.add("hide");
-  setTimeout(() => appLoader.remove(), 300);
-}
+      appLoader.classList.add("hide");
+      setTimeout(() => appLoader.remove(), 450);
+    }
+  }
+})();
 
-  });
 qs("userSearch").addEventListener("input", e => {
   renderUsers(e.target.value);
 });
