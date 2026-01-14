@@ -182,6 +182,37 @@ router.post("/reservations", requireAuth, async (req, res) => {
   const username = req.session.user.username;
   const isAdmin = req.session.user.role === "admin";
 
+  // ===== APPLICA LIMITI PRENOTAZIONE =====
+  if (!isAdmin) {
+    const cfgSnap = await db.collection("admin").doc("config").get();
+    const cfg = cfgSnap.exists ? cfgSnap.data() : {};
+
+    const maxPerDay = Number(cfg.maxBookingsPerUserPerDay || 1);
+    const maxActive = Number(cfg.maxActiveBookingsPerUser || 1);
+
+    // prenotazioni attive totali
+    const activeSnap = await db
+      .collection("reservations")
+      .where("user", "==", username)
+      .get();
+
+    if (activeSnap.size >= maxActive) {
+      return res.status(403).json({ error: "ACTIVE_BOOKING_LIMIT" });
+    }
+
+    // prenotazioni per quel giorno
+    const daySnap = await db
+      .collection("reservations")
+      .where("user", "==", username)
+      .where("date", "==", date)
+      .get();
+
+    if (daySnap.size >= maxPerDay) {
+      return res.status(403).json({ error: "MAX_PER_DAY_LIMIT" });
+    }
+  }
+
+
   const id = `${fieldId}_${date}_${time}`;
   const ref = db.collection("reservations").doc(id);
   if ((await ref.get()).exists) {
