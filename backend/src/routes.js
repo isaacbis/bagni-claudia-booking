@@ -78,6 +78,10 @@ async function cleanupExpiredReservations() {
 
   await batch.commit();
 }
+function minutes(t) {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
 
 /* =================== AUTH =================== */
 router.post("/login", loginLimiter, async (req, res) => {
@@ -207,7 +211,8 @@ if (!isAdmin) {
     .collection("slots")
     .get();
 
-  const reqMin = timeToMinutes(time);
+  const reqMin = minutes(time);
+
 
   for (const d of snap.docs) {
     const c = d.data();
@@ -218,8 +223,8 @@ if (!isAdmin) {
     // data fuori intervallo
     if (date < c.startDate || date > c.endDate) continue;
 
-    const from = timeToMinutes(c.startTime);
-    const to = timeToMinutes(c.endTime);
+   const from = minutes(c.startTime);
+const to = minutes(c.endTime);
 
     if (reqMin >= from && reqMin < to) {
       return res.status(400).json({
