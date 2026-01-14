@@ -1105,14 +1105,21 @@ if (addAllBtn) {
 
   qs("btnAdminGallery").onclick = () => openAdmin("adminGallery");
 
-qs("btnAdminClosedDays").onclick = () => {
-  openAdmin("adminClosedDays");
-  renderClosedDays();
-};
-qs("btnAdminClosedSlots").onclick = () => {
-  openAdmin("adminClosedSlots");
-  loadClosedSlots();
-};
+const btnAdminClosedDays = qs("btnAdminClosedDays");
+if (btnAdminClosedDays) {
+  btnAdminClosedDays.onclick = () => {
+    openAdmin("adminClosedDays");
+    renderClosedDays();
+  };
+}
+
+const btnAdminClosedSlots = qs("btnAdminClosedSlots");
+if (btnAdminClosedSlots) {
+  btnAdminClosedSlots.onclick = () => {
+    openAdmin("adminClosedSlots");
+    loadClosedSlots();
+  };
+}
 
 
   document.querySelectorAll(".backAdmin")
