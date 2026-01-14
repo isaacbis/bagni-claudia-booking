@@ -17,6 +17,8 @@ let STATE = {
   gallery: [],
   galleryDraft: [],
   closedDays: [],
+  closedSlots: [],
+
 };
 
 
@@ -249,6 +251,9 @@ if (sel) {
 
 const closed = await api("/public/closed-days");
 STATE.closedDays = closed.days || [];
+
+const closedSlotsRes = await api("/public/closed-slots");
+STATE.closedSlots = closedSlotsRes.items || [];
   STATE.fieldsDraft = [...STATE.fields];
   STATE.notes = pub.notesText || "";
   STATE.gallery = pub.gallery || [];
@@ -410,10 +415,28 @@ else if (isToday && m <= nowMinutes()) {
       o.textContent = `${t} ❌ Occupato`;
       o.disabled = true;
     } else {
-      o.textContent = `${t} ✅ Libero`;
-    }
+  const mTime = minutes(t);
+  const date = qs("datePick").value;
 
-    sel.appendChild(o);
+  const isClosed = STATE.closedSlots.some(c => {
+    if (c.fieldId !== "*" && c.fieldId !== field) return false;
+    if (date < c.startDate || date > c.endDate) return false;
+
+    const from = minutes(c.startTime);
+    const to = minutes(c.endTime);
+
+    return mTime >= from && mTime < to;
+  });
+
+  // ⛔ se chiuso → NON MOSTRARLO
+  if (isClosed) {
+    continue; // ← sparisce completamente
+  }
+
+  o.textContent = `${t} ✅ Libero`;
+}
+sel.appendChild(o);
+
   }
 }
 

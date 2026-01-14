@@ -486,6 +486,19 @@ router.get("/public/closed-days", async (req, res) => {
   res.json({ days });
 });
 
+// PUBLIC: chiusure orarie
+router.get("/public/closed-slots", async (req, res) => {
+  const snap = await db
+    .collection("admin")
+    .doc("closedSlots")
+    .collection("slots")
+    .get();
+
+  const items = snap.docs.map(d => d.data());
+  res.json({ items });
+});
+
+
 // ADMIN: chiudi giorno
 router.post("/admin/closed-days", requireAdmin, async (req, res) => {
   const { date, reason } = req.body;
