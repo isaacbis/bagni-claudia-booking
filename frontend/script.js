@@ -476,19 +476,17 @@ async function book() {
   const date = qs("datePick").value;
   const time = qs("timeSelect").value;
 
-stopAutoRefresh();
-
-  // ❌ BLOCCO GIORNI PASSATI
   if (isPastDate(date)) {
-  qs("bookMsg").textContent = "❌ Non puoi prenotare un giorno passato";
-  return;
-}
+    qs("bookMsg").textContent = "❌ Non puoi prenotare un giorno passato";
+    return;
+  }
 
-if (isPastTimeToday(date, time)) {
-  qs("bookMsg").textContent = "❌ Orario già passato";
-  return;
-}
+  if (isPastTimeToday(date, time)) {
+    qs("bookMsg").textContent = "❌ Orario già passato";
+    return;
+  }
 
+  stopAutoRefresh(); // ✅ QUI È GIUSTO
 
   qs("bookBtn").disabled = true;
   qs("bookBtn").textContent = "Salvataggio…";
