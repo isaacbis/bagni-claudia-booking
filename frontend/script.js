@@ -17,7 +17,7 @@ let STATE = {
   dayReservationsAll: [],
   gallery: [],
   galleryDraft: [],
- closedDays: [],
+  closedDays: []          // 👈 AGGIUNTO
 };
 
 let AUTO_REFRESH_TIMER = null;
@@ -234,9 +234,12 @@ show(qs("skeleton"));
   const pub = await api("/public/config");
 
   STATE.config = pub;
-  STATE.fields = pub.fields || [];
+STATE.fields = pub.fields || [];
+
+// 👇 AGGIUNGI QUESTO
 const closed = await api("/public/closed-days");
 STATE.closedDays = closed.days || [];
+
   STATE.fieldsDraft = [...STATE.fields];
   STATE.notes = pub.notesText || "";
   STATE.gallery = pub.gallery || [];
@@ -927,8 +930,16 @@ qs("addClosedDayBtn").onclick = async () => {
 
 /* ================= ADMIN NAV ================= */
 function openAdmin(id) {
-  ["adminMenu","adminConfig","adminNotes","adminFields","adminUsers","adminGallery"]
-    .forEach(s => hide(qs(s)));
+  [
+    "adminMenu",
+    "adminConfig",
+    "adminNotes",
+    "adminFields",
+    "adminUsers",
+    "adminGallery",
+    "adminClosedDays"   // 👈 FIX FONDAMENTALE
+  ].forEach(s => hide(qs(s)));
+
   show(qs(id));
 }
 
