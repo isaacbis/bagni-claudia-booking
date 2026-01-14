@@ -180,6 +180,27 @@ router.post("/reservations", requireAuth, async (req, res) => {
   const username = req.session.user.username;
   const isAdmin = req.session.user.role === "admin";
 
+// ================= LIMITI PRENOTAZIONE GIORNALIERI =================
+if (!isAdmin) {
+  const cfgSnap = await db.collection("admin").doc("config").get();
+  const cfg = cfgSnap.exists ? cfgSnap.data() : {};
+
+  const maxPerDay = Number(cfg.maxBookingsPerUserPerDay || 1);
+
+  const sameDaySnap = await db
+    .collection("reservations")
+    .where("date", "==", date)
+    .where("user", "==", username)
+    .get();
+
+  if (sameDaySnap.size >= maxPerDay) {
+    return res.status(400).json({
+      error: "MAX_PER_DAY_LIMIT"
+    });
+  }
+}
+
+
   const id = `${fieldId}_${date}_${time}`;
   const ref = db.collection("reservations").doc(id);
   if ((await ref.get()).exists) {
