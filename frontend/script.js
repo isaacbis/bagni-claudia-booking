@@ -426,23 +426,26 @@ STATE.config.openRanges.forEach(r => {
       o.disabled = true;
     }
     else {
-      const mTime = minutes(t);
-      const date = qs("datePick").value;
+  const mTime = minutes(t);
+  const date = qs("datePick").value;
 
-      const isClosed = STATE.closedSlots.some(c => {
-        if (c.fieldId !== "*" && c.fieldId !== field) return false;
-        if (date < c.startDate || date > c.endDate) return false;
+  const isClosed = STATE.closedSlots.some(c => {
+    if (c.fieldId !== "*" && c.fieldId !== field) return false;
+    if (date < c.startDate || date > c.endDate) return false;
 
-        const from = minutes(c.startTime);
-        const to = minutes(c.endTime);
-        return mTime >= from && mTime < to;
-      });
+    const from = minutes(c.startTime);
+    const to = minutes(c.endTime);
+    return mTime >= from && mTime < to;
+  });
 
-      // ⛔ chiuso → NON MOSTRARLO
-      if (isClosed) return;
+  if (isClosed) {
+    o.disabled = true;
+    o.textContent = `${t} ⛔ Chiuso`;
+  } else {
+    o.textContent = `${t} ✅ Libero`;
+  }
+}
 
-      o.textContent = `${t} ✅ Libero`;
-    }
 
     sel.appendChild(o);
   }
