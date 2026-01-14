@@ -174,33 +174,6 @@ router.post("/reservations", requireAuth, async (req, res) => {
     time: z.string()
   });
 
-  // ===== LIMITI PRENOTAZIONI UTENTE =====
-  const cfgSnap = await db.collection("admin").doc("config").get();
-  const cfg = cfgSnap.exists ? cfgSnap.data() : {};
-
-  const maxPerDay = Number(cfg.maxBookingsPerUserPerDay || 1);
-  const maxActive = Number(cfg.maxActiveBookingsPerUser || 1);
-
-  // prenotazioni attive dell’utente
-  const activeSnap = await db
-    .collection("reservations")
-    .where("user", "==", username)
-    .get();
-
-  if (!isAdmin && activeSnap.size >= maxActive) {
-    return res.status(403).json({ error: "ACTIVE_BOOKING_LIMIT" });
-  }
-
-  // prenotazioni dell’utente per quel giorno
-  const daySnap = await db
-    .collection("reservations")
-    .where("user", "==", username)
-    .where("date", "==", date)
-    .get();
-
-  if (!isAdmin && daySnap.size >= maxPerDay) {
-    return res.status(403).json({ error: "MAX_PER_DAY_LIMIT" });
-  }
 
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "BAD_BODY" });
@@ -269,12 +242,13 @@ router.put("/admin/users/password", requireAdmin, async (req, res) => {
 /* =================== ADMIN CONFIG =================== */
 router.put("/admin/config", requireAdmin, async (req, res) => {
   const schema = z.object({
-    slotMinutes: z.number().min(15).max(180),
-    dayStart: z.string().regex(/^\d{2}:\d{2}$/),
-    dayEnd: z.string().regex(/^\d{2}:\d{2}$/),
-    maxBookingsPerUserPerDay: z.number().min(1).max(10),
-    maxActiveBookingsPerUser: z.number().min(1).max(10)
-  });
+  slotMinutes: z.coerce.number().min(15).max(180),
+  dayStart: z.string().regex(/^\d{2}:\d{2}$/),
+  dayEnd: z.string().regex(/^\d{2}:\d{2}$/),
+  maxBookingsPerUserPerDay: z.coerce.number().min(1).max(10),
+  maxActiveBookingsPerUser: z.coerce.number().min(1).max(10)
+});
+
 
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) {
