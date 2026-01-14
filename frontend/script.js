@@ -707,9 +707,10 @@ async function saveConfig() {
   STATE.config = pub;
 
   // 🔁 aggiorna UI che dipende dagli orari
-  renderTimeSelect();
-  renderFieldInfo();
-  await loadReservations();
+await loadAll();        // ricarica config + closedSlots
+renderTimeSelect();    // ricrea orari corretti
+renderFieldInfo();
+
 
   alert("Configurazione aggiornata ✅");
 }
@@ -1025,9 +1026,15 @@ async function loadClosedSlots() {
     `;
 
     d.querySelector("button").onclick = async () => {
-      await api(`/admin/closed-slots/${c.id}`, { method: "DELETE" });
-      loadClosedSlots();
-    };
+  await api(`/admin/closed-slots/${c.id}`, { method: "DELETE" });
+
+  await loadClosedSlots();
+
+  // 🔄 RICARICA STATO + ORARI
+  await loadAll();
+  renderTimeSelect();
+};
+
 
     box.appendChild(d);
   });
@@ -1048,6 +1055,11 @@ qs("addClosedSlotBtn").onclick = async () => {
     });
 
     await loadClosedSlots();
+
+    // 🔄 RICARICA STATO + ORARI
+    await loadAll();
+    renderTimeSelect();
+
     alert("Chiusura oraria salvata ✅");
   } catch (e) {
     alert(`Errore salvataggio ❌ (${e?.error || "UNKNOWN"})`);
