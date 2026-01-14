@@ -284,12 +284,7 @@ if (STATE.fields.length > 0) {
   if (STATE.me.role === "admin") {
     show(qs("adminMenu"));
     qs("cfgSlotMinutes").value = pub.slotMinutes;
-    qs("openRanges").innerHTML = "";
-
-(pub.openRanges || [
-  { start: pub.dayStart, end: pub.dayEnd }
-]).forEach(r => addOpenRange(r.start, r.end));
-qs("addRangeBtn").onclick = () => addOpenRange();
+    qs("addRangeBtn").onclick = () => addOpenRange();
 
     qs("cfgMaxPerDay").value = pub.maxBookingsPerUserPerDay;
     qs("cfgMaxActive").value = pub.maxActiveBookingsPerUser;
@@ -402,49 +397,24 @@ const taken = new Set(
 );
 
 // usa SOLO le fasce aperte
-STATE.config.openRanges.forEach(r => {
-  const start = minutes(r.start);
-  const end = minutes(r.end);
+const start = minutes(STATE.config.dayStart);
+const end   = minutes(STATE.config.dayEnd);
 
-  for (let m = start; m + slot <= end; m += slot) {
-    const t = timeStr(m);
-    const o = document.createElement("option");
-    o.value = t;
+for (let m = start; m + slot <= end; m += slot) {
+  const t = timeStr(m);
+  const o = document.createElement("option");
+  o.value = t;
 
-    if (isPastDate(qs("datePick").value)) {
-      o.textContent = `${t} ⛔ Giorno passato`;
-      o.disabled = true;
-    }
-    else if (isToday && m <= nowMinutes()) {
-      o.textContent = `${t} ⏰ Orario passato`;
-      o.disabled = true;
-    }
-    else if (taken.has(t)) {
-      o.textContent = `${t} ❌ Occupato`;
-      o.disabled = true;
-    }
-    else {
-      const mTime = minutes(t);
-      const date = qs("datePick").value;
-
-      const isClosed = STATE.closedSlots.some(c => {
-        if (c.fieldId !== "*" && c.fieldId !== field) return false;
-        if (date < c.startDate || date > c.endDate) return false;
-
-        const from = minutes(c.startTime);
-        const to = minutes(c.endTime);
-        return mTime >= from && mTime < to;
-      });
-
-      // ⛔ chiuso → NON MOSTRARLO
-      if (isClosed) return;
-
-      o.textContent = `${t} ✅ Libero`;
-    }
-
-    sel.appendChild(o);
+  if (taken.has(t)) {
+    o.textContent = `${t} ❌ Occupato`;
+    o.disabled = true;
+  } else {
+    o.textContent = `${t} ✅ Libero`;
   }
-});
+
+  sel.appendChild(o);
+}
+}
 
 
 function renderTimeline(fieldId) {
@@ -457,32 +427,20 @@ function renderTimeline(fieldId) {
   const slots = [];
 
   // 🔁 usa SOLO le fasce aperte
-  STATE.config.openRanges.forEach(r => {
-    const start = minutes(r.start);
-    const end = minutes(r.end);
+  const start = minutes(STATE.config.dayStart);
+const end   = minutes(STATE.config.dayEnd);
 
-    for (let m = start; m + slotMinutes <= end; m += slotMinutes) {
-      const t = timeStr(m);
-      const el = document.createElement("div");
+for (let m = start; m + slotMinutes <= end; m += slotMinutes) {
+  const t = timeStr(m);
+  const el = document.createElement("div");
 
-      const isClosed = STATE.closedSlots.some(c => {
-  if (c.fieldId !== "*" && c.fieldId !== fieldId) return false;
-  if (qs("datePick").value < c.startDate || qs("datePick").value > c.endDate) return false;
+  el.dataset.start = m;
+  el.innerHTML = `<div class="slot-time">${t}</div>`;
 
-  const from = minutes(c.startTime);
-  const to = minutes(c.endTime);
-  return m >= from && m < to;
-});
+  box.appendChild(el);
+  slots.push(el);
+}
 
-if (isClosed) return; // 👈 SLOT NASCOSTO
-
-      el.dataset.start = m;
-
-      el.innerHTML = `<div class="slot-time">${t}</div>`;
-      box.appendChild(el);
-      slots.push(el);
-    }
-  });
 
   // se non ci sono slot → niente marker
   if (slots.length === 0) return;
@@ -719,12 +677,13 @@ async function saveConfig() {
 await api("/admin/config", {
   method: "PUT",
   body: JSON.stringify({
-    slotMinutes: Number(qs("cfgSlotMinutes").value),
-    openRanges: ranges,
-    maxBookingsPerUserPerDay: Number(qs("cfgMaxPerDay").value),
-    maxBookingsPerUserPerWeek: Number(qs("cfgMaxPerWeek").value),
-    maxActiveBookingsPerUser: Number(qs("cfgMaxActive").value)
-  })
+  slotMinutes: Number(qs("cfgSlotMinutes").value),
+  dayStart: qs("cfgDayStart").value,
+  dayEnd: qs("cfgDayEnd").value,
+  maxBookingsPerUserPerDay: Number(qs("cfgMaxPerDay").value),
+  maxActiveBookingsPerUser: Number(qs("cfgMaxActive").value)
+})
+
 });
 
 
