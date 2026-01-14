@@ -166,38 +166,50 @@ router.get("/reservations", requireAuth, async (req, res) => {
 });
 
 router.post("/reservations", requireAuth, async (req, res) => {
-  await cleanupExpiredReservations();
+  const { fieldId, date, time } = req.body;
+  const username = req.user.username;
 
-  const schema = z.object({
-    fieldId: z.string(),
-    date: z.string(),
-    time: z.string()
-  });
-  const parsed = schema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "BAD_BODY" });
+  // 🔹 carica config
+  const cfgSnap = await db.collection("config").doc("public").get();
+  const cfg = cfgSnap.data() || {};
 
-  const { fieldId, date, time } = parsed.data;
-  const username = req.session.user.username;
-  const isAdmin = req.session.user.role === "admin";
+  const maxPerDay = Number(cfg.maxBookingsPerUserPerDay || 1);
+  const maxActive = Number(cfg.maxActiveBookingsPerUser || 1);
 
-  const id = `${fieldId}_${date}_${time}`;
-  const ref = db.collection("reservations").doc(id);
-  if ((await ref.get()).exists) {
-    return res.status(409).json({ error: "SLOT_TAKEN" });
+  // 🔹 prenotazioni attive dell’utente
+  const activeSnap = await db
+    .collection("reservations")
+    .where("user", "==", username)
+    .where("date", ">=", new Date().toISOString().slice(0, 10))
+    .get();
+
+  if (activeSnap.size >= maxActive) {
+    return res.status(400).json({
+      error: "ACTIVE_BOOKING_LIMIT"
+    });
   }
 
-  await ref.set({
+  // 🔹 prenotazioni dell’utente in quel giorno
+  const daySnap = await db
+    .collection("reservations")
+    .where("user", "==", username)
+    .where("date", "==", date)
+    .get();
+
+  if (daySnap.size >= maxPerDay) {
+    return res.status(400).json({
+      error: "MAX_PER_DAY_LIMIT"
+    });
+  }
+
+  // 🔹 salva prenotazione
+  await db.collection("reservations").add({
     fieldId,
     date,
     time,
     user: username,
-    createdAt: FieldValue.serverTimestamp()
+    createdAt: new Date().toISOString()
   });
-
-  if (!isAdmin) {
-    await db.collection("users").doc(username)
-      .update({ credits: FieldValue.increment(-1) });
-  }
 
   res.json({ ok: true });
 });
