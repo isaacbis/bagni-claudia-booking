@@ -966,8 +966,16 @@ qs("addClosedRangeBtn").onclick = async () => {
 
 /* ================= ADMIN NAV ================= */
 function openAdmin(id) {
-  ["adminMenu","adminConfig","adminNotes","adminFields","adminUsers","adminGallery"]
-    .forEach(s => hide(qs(s)));
+  [
+    "adminMenu",
+    "adminConfig",
+    "adminNotes",
+    "adminFields",
+    "adminUsers",
+    "adminGallery",
+    "adminClosedDays"   // 👈 FIX
+  ].forEach(s => hide(qs(s)));
+
   show(qs(id));
 }
 
