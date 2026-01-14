@@ -199,6 +199,36 @@ if (!isAdmin) {
     });
   }
 }
+// ================= CHIUSURE ORARIE SU PERIODO =================
+if (!isAdmin) {
+  const snap = await db
+    .collection("admin")
+    .doc("closedSlots")
+    .collection("slots")
+    .get();
+
+  const reqMin = timeToMinutes(time);
+
+  for (const d of snap.docs) {
+    const c = d.data();
+
+    // campo specifico o tutti
+    if (c.fieldId !== "*" && c.fieldId !== fieldId) continue;
+
+    // data fuori intervallo
+    if (date < c.startDate || date > c.endDate) continue;
+
+    const from = timeToMinutes(c.startTime);
+    const to = timeToMinutes(c.endTime);
+
+    if (reqMin >= from && reqMin < to) {
+      return res.status(400).json({
+        error: "FIELD_CLOSED_TIME",
+        reason: c.reason || "Campo chiuso in questo orario"
+      });
+    }
+  }
+}
 
 
   const id = `${fieldId}_${date}_${time}`;
