@@ -182,8 +182,21 @@ router.post("/reservations", requireAuth, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: "BAD_BODY" });
 
   const { fieldId, date, time } = parsed.data;
-  const username = req.session.user.username;
-  const isAdmin = req.session.user.role === "admin";
+const username = req.session.user.username;
+const isAdmin = req.session.user.role === "admin";
+
+// ===== CONTROLLO CREDITI (OBBLIGATORIO) =====
+if (!isAdmin) {
+  const userSnap = await db.collection("users").doc(username).get();
+  const user = userSnap.exists ? userSnap.data() : {};
+
+  if ((user.credits ?? 0) <= 0) {
+    return res.status(400).json({
+      error: "NO_CREDITS"
+    });
+  }
+}
+
 
 
 // ================= LIMITI PRENOTAZIONE GIORNALIERI =================
@@ -296,17 +309,8 @@ router.delete("/reservations/:id", requireAuth, async (req, res) => {
   if (!snap.exists) return res.json({ ok: true });
 
   const r = snap.data();
-  if (!isAdmin) {
-  const userSnap = await db.collection("users").doc(username).get();
-  const user = userSnap.exists ? userSnap.data() : {};
-
-  if ((user.credits ?? 0) <= 0) {
-    return res.status(400).json({
-      error: "NO_CREDITS"
-    });
-  }
-}
-
+  const username = req.session.user.username;
+  const isAdmin = req.session.user.role === "admin";
 
   if (!isAdmin && r.user !== username) {
     return res.status(403).json({ error: "NOT_ALLOWED" });
