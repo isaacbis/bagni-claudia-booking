@@ -954,40 +954,50 @@ function renderClosedDays() {
     list.appendChild(el);
   });
 }
-qs("addClosedDayBtn").onclick = async () => {
-  const date = qs("closedDate").value;
-  const reason = qs("closedReason").value;
+const addClosedDayBtn = qs("addClosedDayBtn");
+if (addClosedDayBtn) {
+  addClosedDayBtn.onclick = async () => {
+    const date = qs("closedDate").value;
+    const reason = qs("closedReason").value;
+    if (!date) return;
 
-  if (!date) return;
+    await api("/admin/closed-days", {
+      method: "POST",
+      body: JSON.stringify({ date, reason })
+    });
 
-  await api("/admin/closed-days", {
-    method: "POST",
-    body: JSON.stringify({ date, reason })
-  });
+    STATE.closedDays.push(date);
+    renderClosedDays();
+  };
+}
 
-  STATE.closedDays.push(date);
-  renderClosedDays();
-};
-qs("addClosedRangeBtn").onclick = async () => {
-  const start = qs("closedStart").value;
-  const end = qs("closedEnd").value;
-  const reason = qs("closedRangeReason").value;
+const addClosedRangeBtn = qs("addClosedRangeBtn");
+if (addClosedRangeBtn) {
+  addClosedRangeBtn.onclick = async () => {
+    const start = qs("closedStart").value;
+    const end = qs("closedEnd").value;
+    const reason = qs("closedRangeReason").value;
 
-  if (!start || !end) {
-    alert("Seleziona data inizio e fine");
-    return;
-  }
+    if (!start || !end) {
+      alert("Seleziona data inizio e fine");
+      return;
+    }
 
-  if (!confirm(`Chiudere il periodo dal ${start} al ${end}?`)) return;
+    if (!confirm(`Chiudere il periodo dal ${start} al ${end}?`)) return;
 
-  await api("/admin/closed-days/range", {
-    method: "POST",
-    body: JSON.stringify({
-      startDate: start,
-      endDate: end,
-      reason
-    })
-  });
+    await api("/admin/closed-days/range", {
+      method: "POST",
+      body: JSON.stringify({
+        startDate: start,
+        endDate: end,
+        reason
+      })
+    });
+
+    await loadAll();
+    renderTimeSelect();
+  };
+}
 
 
   // aggiorna stato locale
