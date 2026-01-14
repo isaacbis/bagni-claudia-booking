@@ -191,33 +191,50 @@ if (!isAdmin) {
   const cfg = cfgSnap.exists ? cfgSnap.data() : {};
 
   const maxPerDay = Number(cfg.maxBookingsPerUserPerDay || 1);
+  const maxPerWeek = Number(cfg.maxBookingsPerUserPerWeek || 3);
+  const maxActive = Number(cfg.maxActiveBookingsPerUser || 1);
 
+  // ===== LIMITE GIORNALIERO =====
   const sameDaySnap = await db
     .collection("reservations")
     .where("date", "==", date)
     .where("user", "==", username)
     .get();
 
-  // LIMITE SETTIMANALE
-const startOfWeek = new Date(date);
-startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
-const endOfWeek = new Date(startOfWeek);
-endOfWeek.setDate(startOfWeek.getDate() + 6);
+  if (sameDaySnap.size >= maxPerDay) {
+    return res.status(400).json({ error: "MAX_PER_DAY_LIMIT" });
+  }
 
-const weekSnap = await db
-  .collection("reservations")
-  .where("user", "==", username)
-  .where("date", ">=", startOfWeek.toISOString().slice(0,10))
-  .where("date", "<=", endOfWeek.toISOString().slice(0,10))
-  .get();
+  // ===== LIMITE SETTIMANALE =====
+  const startOfWeek = new Date(date);
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-if (weekSnap.size >= Number(cfg.maxBookingsPerUserPerWeek || 3)) {
-  return res.status(400).json({
-    error: "MAX_PER_WEEK_LIMIT"
-  });
+  const weekSnap = await db
+    .collection("reservations")
+    .where("user", "==", username)
+    .where("date", ">=", startOfWeek.toISOString().slice(0, 10))
+    .where("date", "<=", endOfWeek.toISOString().slice(0, 10))
+    .get();
+
+  if (weekSnap.size >= maxPerWeek) {
+    return res.status(400).json({ error: "MAX_PER_WEEK_LIMIT" });
+  }
+
+  // ===== LIMITE PRENOTAZIONI ATTIVE =====
+  const today = localISODate();
+  const activeSnap = await db
+    .collection("reservations")
+    .where("user", "==", username)
+    .where("date", ">=", today)
+    .get();
+
+  if (activeSnap.size >= maxActive) {
+    return res.status(400).json({ error: "ACTIVE_BOOKING_LIMIT" });
+  }
 }
 
-}
 // ================= CHIUSURE ORARIE SU PERIODO =================
 if (!isAdmin) {
   const snap = await db
@@ -278,8 +295,17 @@ router.delete("/reservations/:id", requireAuth, async (req, res) => {
   if (!snap.exists) return res.json({ ok: true });
 
   const r = snap.data();
-  const username = req.session.user.username;
-  const isAdmin = req.session.user.role === "admin";
+  if (!isAdmin) {
+  const userSnap = await db.collection("users").doc(username).get();
+  const user = userSnap.exists ? userSnap.data() : {};
+
+  if ((user.credits ?? 0) <= 0) {
+    return res.status(400).json({
+      error: "NO_CREDITS"
+    });
+  }
+}
+
 
   if (!isAdmin && r.user !== username) {
     return res.status(403).json({ error: "NOT_ALLOWED" });
