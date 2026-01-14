@@ -502,17 +502,16 @@ if (isPastTimeToday(date, time)) {
   renderReservations();
   renderTimeSelect();
 
-  try {
-    await api("/reservations", {
-      method: "POST",
-      body: JSON.stringify({ fieldId, date, time })
-    });
+try {
+  await api("/reservations", {
+    method: "POST",
+    body: JSON.stringify({ fieldId, date, time })
+  });
 
-    qs("bookMsg").textContent = "Prenotazione effettuata ✅";
-    await refreshCredits();
-    await loadReservations();
+  qs("bookMsg").textContent = "Prenotazione effettuata ✅";
+  await refreshCredits();
 
-  } catch (e) {
+} catch (e) {
   qs("bookMsg").textContent =
     e?.error === "ACTIVE_BOOKING_LIMIT"
       ? "Hai raggiunto il limite di prenotazioni attive"
@@ -520,12 +519,15 @@ if (isPastTimeToday(date, time)) {
       ? "Hai raggiunto il limite di prenotazioni per questo giorno"
       : "Errore prenotazione";
 
-  await loadReservations();
-}
-
+} finally {
+  // 🔁 SEMPRE eseguito
+  try {
+    await loadReservations();
+  } catch {}
 
   qs("bookBtn").disabled = false;
   qs("bookBtn").textContent = "Prenota";
+ }
 }
 
 async function deleteReservation(id) {
