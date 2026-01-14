@@ -292,7 +292,9 @@ if (STATE.fields.length > 0) {
 qs("addRangeBtn").onclick = () => addOpenRange();
 
     qs("cfgMaxPerDay").value = pub.maxBookingsPerUserPerDay;
-    qs("cfgMaxActive").value = pub.maxActiveBookingsPerUser;
+qs("cfgMaxPerWeek").value = pub.maxBookingsPerUserPerWeek || 3;
+qs("cfgMaxActive").value = pub.maxActiveBookingsPerUser;
+
     qs("notesText").value = STATE.notes;
     renderFieldsAdmin();
     renderGalleryAdmin();
@@ -465,11 +467,17 @@ function renderTimeline(fieldId) {
       const t = timeStr(m);
       const el = document.createElement("div");
 
-      const isBusy = STATE.dayReservationsAll.some(
-        r => r.fieldId === fieldId && r.time === t
-      );
+      const isClosed = STATE.closedSlots.some(c => {
+  if (c.fieldId !== "*" && c.fieldId !== fieldId) return false;
+  if (qs("datePick").value < c.startDate || qs("datePick").value > c.endDate) return false;
 
-      el.className = "slot " + (isBusy ? "busy" : "free");
+  const from = minutes(c.startTime);
+  const to = minutes(c.endTime);
+  return m >= from && m < to;
+});
+
+if (isClosed) return; // 👈 SLOT NASCOSTO
+
       el.dataset.start = m;
 
       el.innerHTML = `<div class="slot-time">${t}</div>`;
@@ -716,6 +724,7 @@ await api("/admin/config", {
     slotMinutes: Number(qs("cfgSlotMinutes").value),
     openRanges: ranges,
     maxBookingsPerUserPerDay: Number(qs("cfgMaxPerDay").value),
+    maxBookingsPerUserPerWeek: Number(qs("cfgMaxPerWeek").value),
     maxActiveBookingsPerUser: Number(qs("cfgMaxActive").value)
   })
 });
@@ -726,8 +735,9 @@ await api("/admin/config", {
   STATE.config = pub;
 
   // 🔁 aggiorna UI che dipende dagli orari
-await loadAll();        // ricarica config + closedSlots
-renderTimeSelect();    // ricrea orari corretti
+await loadAll(true);   // forza ricarica data + config
+await loadReservations(); // 🔴 QUESTO MANCAVA
+renderTimeSelect();
 renderFieldInfo();
 
 
