@@ -1000,25 +1000,7 @@ if (addClosedRangeBtn) {
 }
 
 
-  // aggiorna stato locale
-  let d = new Date(start);
-  const endD = new Date(end);
-
-  while (d <= endD) {
-    const iso = d.toISOString().slice(0, 10);
-    if (!STATE.closedDays.includes(iso)) {
-      STATE.closedDays.push(iso);
-    }
-    d.setDate(d.getDate() + 1);
-  }
-
-  renderClosedDays();
-
-  qs("closedStart").value = "";
-  qs("closedEnd").value = "";
-  qs("closedRangeReason").value = "";
-};
-
+  
 /* ================= CLOSED SLOTS (CHIUSURE ORARIE) ================= */
 
 async function loadClosedSlots() {
@@ -1052,31 +1034,32 @@ async function loadClosedSlots() {
   });
 }
 
-qs("addClosedSlotBtn").onclick = async () => {
-  try {
-    await api("/admin/closed-slots", {
-      method: "POST",
-      body: JSON.stringify({
-        fieldId: qs("closedSlotField").value,
-        startDate: qs("closedSlotStartDate").value,
-        endDate: qs("closedSlotEndDate").value,
-        startTime: qs("closedSlotStartTime").value,
-        endTime: qs("closedSlotEndTime").value,
-        reason: qs("closedSlotReason").value
-      })
-    });
+const addClosedSlotBtn = qs("addClosedSlotBtn");
+if (addClosedSlotBtn) {
+  addClosedSlotBtn.onclick = async () => {
+    try {
+      await api("/admin/closed-slots", {
+        method: "POST",
+        body: JSON.stringify({
+          fieldId: qs("closedSlotField").value,
+          startDate: qs("closedSlotStartDate").value,
+          endDate: qs("closedSlotEndDate").value,
+          startTime: qs("closedSlotStartTime").value,
+          endTime: qs("closedSlotEndTime").value,
+          reason: qs("closedSlotReason").value
+        })
+      });
 
-    await loadClosedSlots();
+      await loadClosedSlots();
+      await loadAll();
+      renderTimeSelect();
 
-    // 🔄 RICARICA STATO + ORARI
-    await loadAll();
-    renderTimeSelect();
-
-    alert("Chiusura oraria salvata ✅");
-  } catch (e) {
-    alert(`Errore salvataggio ❌ (${e?.error || "UNKNOWN"})`);
-  }
-};
+      alert("Chiusura oraria salvata ✅");
+    } catch (e) {
+      alert(`Errore salvataggio ❌ (${e?.error || "UNKNOWN"})`);
+    }
+  };
+}
 
 
 
