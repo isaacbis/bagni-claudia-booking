@@ -351,5 +351,51 @@ router.post("/admin/users/add-credits-all", requireAdmin, async (req, res) => {
   await batch.commit();
   res.json({ updated: snap.size });
 });
+/* =================== CLOSED DAYS =================== */
+
+// PUBLIC: giorni chiusi
+router.get("/public/closed-days", async (req, res) => {
+  const snap = await db
+    .collection("admin")
+    .doc("closedDays")
+    .collection("days")
+    .get();
+
+  const days = snap.docs.map(d => d.id);
+  res.json({ days });
+});
+
+// ADMIN: chiudi giorno
+router.post("/admin/closed-days", requireAdmin, async (req, res) => {
+  const { date, reason } = req.body;
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return res.status(400).json({ error: "BAD_DATE" });
+  }
+
+  await db
+    .collection("admin")
+    .doc("closedDays")
+    .collection("days")
+    .doc(date)
+    .set({
+      reason: reason || "",
+      createdAt: FieldValue.serverTimestamp()
+    });
+
+  res.json({ ok: true });
+});
+
+// ADMIN: riapri giorno
+router.delete("/admin/closed-days/:date", requireAdmin, async (req, res) => {
+  await db
+    .collection("admin")
+    .doc("closedDays")
+    .collection("days")
+    .doc(req.params.date)
+    .delete();
+
+  res.json({ ok: true });
+});
 
 export default router;

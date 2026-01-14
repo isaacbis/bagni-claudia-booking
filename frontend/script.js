@@ -15,7 +15,8 @@ let STATE = {
   reservations: [],
   dayReservationsAll: [],
   gallery: [],
-  galleryDraft: []
+  galleryDraft: [],
+ closedDays: [],
 };
 
 let AUTO_REFRESH_TIMER = null;
@@ -233,6 +234,8 @@ show(qs("skeleton"));
 
   STATE.config = pub;
   STATE.fields = pub.fields || [];
+const closed = await api("/public/closed-days");
+STATE.closedDays = closed.days || [];
   STATE.fieldsDraft = [...STATE.fields];
   STATE.notes = pub.notesText || "";
   STATE.gallery = pub.gallery || [];
@@ -283,6 +286,20 @@ hide(qs("skeleton"));
 /* ================= RESERVATIONS ================= */
 async function loadReservations() {
   const date = qs("datePick").value;
+
+// ⛔ BLOCCO GIORNI CHIUSI
+if (STATE.closedDays.includes(date)) {
+  qs("bookBtn").disabled = true;
+  qs("bookMsg").textContent = "⛔ Struttura chiusa per questa data";
+
+  STATE.dayReservationsAll = [];
+  STATE.reservations = [];
+
+  renderTimeSelect();
+  renderReservations();
+  renderFieldInfo();
+  return;
+}
 
   // ❌ BLOCCO GIORNI PASSATI
   if (isPastDate(date)) {
@@ -870,6 +887,42 @@ async function saveGallery() {
     body: JSON.stringify({ images: STATE.galleryDraft })
   });
 }
+function renderClosedDays() {
+  const list = qs("closedDaysList");
+  list.innerHTML = "";
+
+  STATE.closedDays.forEach(d => {
+    const el = document.createElement("div");
+    el.className = "item";
+    el.textContent = d;
+
+    const b = document.createElement("button");
+    b.className = "btn-ghost";
+    b.textContent = "❌";
+    b.onclick = async () => {
+      await api(`/admin/closed-days/${d}`, { method: "DELETE" });
+      STATE.closedDays = STATE.closedDays.filter(x => x !== d);
+      renderClosedDays();
+    };
+
+    el.appendChild(b);
+    list.appendChild(el);
+  });
+}
+qs("addClosedDayBtn").onclick = async () => {
+  const date = qs("closedDate").value;
+  const reason = qs("closedReason").value;
+
+  if (!date) return;
+
+  await api("/admin/closed-days", {
+    method: "POST",
+    body: JSON.stringify({ date, reason })
+  });
+
+  STATE.closedDays.push(date);
+  renderClosedDays();
+};
 
 /* ================= ADMIN NAV ================= */
 function openAdmin(id) {
@@ -903,6 +956,12 @@ if (addAllBtn) {
 
 
   qs("btnAdminGallery").onclick = () => openAdmin("adminGallery");
+
+qs("btnAdminClosedDays").onclick = () => {
+  openAdmin("adminClosedDays");
+  renderClosedDays();
+};
+
 
   document.querySelectorAll(".backAdmin")
     .forEach(b => b.onclick = () => openAdmin("adminMenu"));
