@@ -139,11 +139,12 @@ router.get("/public/config", async (req, res) => {
   const cfg = cfgSnap.exists ? cfgSnap.data() : {};
 
   res.json({
-    slotMinutes: Number(cfg.slotMinutes || 45),
-    dayStart: cfg.dayStart || "09:00",
-    dayEnd: cfg.dayEnd || "20:00",
-    maxBookingsPerUserPerDay: Number(cfg.maxBookingsPerUserPerDay || 1),
-    maxActiveBookingsPerUser: Number(cfg.maxActiveBookingsPerUser || 1),
+  slotMinutes: Number(cfg.slotMinutes || 45),
+  openRanges: cfg.openRanges || [
+    { start: "09:00", end: "20:00" }
+  ],
+  maxBookingsPerUserPerDay: Number(cfg.maxBookingsPerUserPerDay || 1),
+  maxActiveBookingsPerUser: Number(cfg.maxActiveBookingsPerUser || 1),
     fields: fieldsSnap.exists ? (fieldsSnap.data().fields || []) : [],
     notesText: notesSnap.exists ? (notesSnap.data().text || "") : "",
     gallery: gallerySnap.exists ? (gallerySnap.data().images || []) : []
@@ -296,12 +297,17 @@ router.put("/admin/users/password", requireAdmin, async (req, res) => {
 /* =================== ADMIN CONFIG =================== */
 router.put("/admin/config", requireAdmin, async (req, res) => {
   const schema = z.object({
-    slotMinutes: z.number().min(15).max(180),
-    dayStart: z.string().regex(/^\d{2}:\d{2}$/),
-    dayEnd: z.string().regex(/^\d{2}:\d{2}$/),
-    maxBookingsPerUserPerDay: z.number().min(1).max(10),
-    maxActiveBookingsPerUser: z.number().min(1).max(10)
-  });
+  slotMinutes: z.number().min(15).max(180),
+  openRanges: z.array(
+    z.object({
+      start: z.string().regex(/^\d{2}:\d{2}$/),
+      end: z.string().regex(/^\d{2}:\d{2}$/)
+    })
+  ),
+  maxBookingsPerUserPerDay: z.number().min(1).max(10),
+  maxActiveBookingsPerUser: z.number().min(1).max(10)
+});
+
 
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) {

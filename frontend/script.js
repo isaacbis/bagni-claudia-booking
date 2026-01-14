@@ -1187,7 +1187,11 @@ loadAll(true)
     show(qs("loginBox"));
     hide(qs("app"));
     hide(qs("logoutBtn"));
-    hide(appLoader);
+    if (appLoader) {
+  appLoader.classList.add("hide");
+  setTimeout(() => appLoader.remove(), 300);
+}
+
   });
 qs("userSearch").addEventListener("input", e => {
   renderUsers(e.target.value);

@@ -121,8 +121,13 @@
   <section id="adminConfig" class="card hidden">
     <h4>Configurazione</h4>
     <input id="cfgSlotMinutes" type="number" placeholder="Durata slot (min)">
-    <input id="cfgDayStart" type="time">
-    <input id="cfgDayEnd" type="time">
+    <div id="openRanges"></div>
+
+<button id="addRangeBtn" class="btn-ghost">
+  ➕ Aggiungi fascia oraria
+</button>
+
+
     <input id="cfgMaxPerDay" type="number" placeholder="Max prenotazioni/giorno">
     <input id="cfgMaxActive" type="number" placeholder="Max prenotazioni attive">
     <button id="saveConfigBtn" class="btn">Salva</button>
