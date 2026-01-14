@@ -185,6 +185,7 @@ router.post("/reservations", requireAuth, async (req, res) => {
   const username = req.session.user.username;
   const isAdmin = req.session.user.role === "admin";
 
+
 // ================= LIMITI PRENOTAZIONE GIORNALIERI =================
 if (!isAdmin) {
   const cfgSnap = await db.collection("admin").doc("config").get();
@@ -227,7 +228,7 @@ if (!isAdmin) {
   const activeSnap = await db
     .collection("reservations")
     .where("user", "==", username)
-    .where("date", ">=", today)
+    .where("date", ">", today)
     .get();
 
   if (activeSnap.size >= maxActive) {
