@@ -198,11 +198,25 @@ if (!isAdmin) {
     .where("user", "==", username)
     .get();
 
-  if (sameDaySnap.size >= maxPerDay) {
-    return res.status(400).json({
-      error: "MAX_PER_DAY_LIMIT"
-    });
-  }
+  // LIMITE SETTIMANALE
+const startOfWeek = new Date(date);
+startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
+const endOfWeek = new Date(startOfWeek);
+endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+const weekSnap = await db
+  .collection("reservations")
+  .where("user", "==", username)
+  .where("date", ">=", startOfWeek.toISOString().slice(0,10))
+  .where("date", "<=", endOfWeek.toISOString().slice(0,10))
+  .get();
+
+if (weekSnap.size >= Number(cfg.maxBookingsPerUserPerWeek || 3)) {
+  return res.status(400).json({
+    error: "MAX_PER_WEEK_LIMIT"
+  });
+}
+
 }
 // ================= CHIUSURE ORARIE SU PERIODO =================
 if (!isAdmin) {
@@ -305,8 +319,10 @@ router.put("/admin/config", requireAdmin, async (req, res) => {
     })
   ),
   maxBookingsPerUserPerDay: z.number().min(1).max(10),
+  maxBookingsPerUserPerWeek: z.number().min(1).max(20), // 👈 AGGIUNGI
   maxActiveBookingsPerUser: z.number().min(1).max(10)
 });
+
 
 
   const parsed = schema.safeParse(req.body);
