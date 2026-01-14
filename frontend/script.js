@@ -449,63 +449,70 @@ STATE.config.openRanges.forEach(r => {
 
 function renderTimeline(fieldId) {
   const slotMinutes = STATE.config.slotMinutes || 45;
-  const start = minutes(STATE.config.dayStart);
-  const end = minutes(STATE.config.dayEnd);
   const now = nowMinutes();
-
   const box = qs("timeline");
   if (!box) return;
   box.innerHTML = "";
 
   const slots = [];
 
-  for (let m = start; m + slotMinutes <= end; m += slotMinutes) {
-    const t = timeStr(m);
-    const el = document.createElement("div");
+  // 🔁 usa SOLO le fasce aperte
+  STATE.config.openRanges.forEach(r => {
+    const start = minutes(r.start);
+    const end = minutes(r.end);
 
-    const isBusy = STATE.dayReservationsAll.some(
-      r => r.fieldId === fieldId && r.time === t
-    );
+    for (let m = start; m + slotMinutes <= end; m += slotMinutes) {
+      const t = timeStr(m);
+      const el = document.createElement("div");
 
-    el.className = "slot " + (isBusy ? "busy" : "free");
-    el.dataset.start = m;
+      const isBusy = STATE.dayReservationsAll.some(
+        r => r.fieldId === fieldId && r.time === t
+      );
 
-    el.innerHTML = `<div class="slot-time">${t}</div>`;
-    box.appendChild(el);
-    slots.push(el);
-  }
+      el.className = "slot " + (isBusy ? "busy" : "free");
+      el.dataset.start = m;
+
+      el.innerHTML = `<div class="slot-time">${t}</div>`;
+      box.appendChild(el);
+      slots.push(el);
+    }
+  });
+
+  // se non ci sono slot → niente marker
+  if (slots.length === 0) return;
 
   // === MARKER ORA ===
   const marker = document.createElement("div");
   marker.className = "now-marker";
   box.appendChild(marker);
 
-  // fuori orario → nasconde
-  if (now < start || now > end) {
+  const first = slots[0].dataset.start;
+  const last = slots[slots.length - 1].dataset.start;
+
+  if (now < first || now > Number(last) + slotMinutes) {
     marker.style.display = "none";
     return;
   }
 
-  // trova lo slot corretto
-  const currentIndex = Math.floor((now - start) / slotMinutes);
-  const currentSlot = slots[currentIndex];
+  // trova lo slot corrente
+  const currentSlot = slots.find(s => {
+    const m = Number(s.dataset.start);
+    return now >= m && now < m + slotMinutes;
+  });
+
   if (!currentSlot) {
     marker.style.display = "none";
     return;
   }
 
-  // posiziona la linea sopra lo slot reale
   const slotRect = currentSlot.getBoundingClientRect();
   const boxRect = box.getBoundingClientRect();
 
   marker.style.display = "block";
-
-marker.style.left =
-  `${slotRect.left - boxRect.left + slotRect.width / 2}px`;
-
-marker.style.top =
-  `${slotRect.top - boxRect.top + (slotRect.height - marker.offsetHeight) / 2}px`;
-
+  marker.style.left =
+    `${slotRect.left - boxRect.left + slotRect.width / 2}px`;
+  marker.style.top =
+    `${slotRect.top - boxRect.top + (slotRect.height - marker.offsetHeight) / 2}px`;
 }
 
 /* ===== PRENOTA (UI OTTIMISTICA) ===== */
