@@ -919,20 +919,6 @@ function renderClosedDays() {
     list.appendChild(el);
   });
 }
-qs("addClosedDayBtn").onclick = async () => {
-  const date = qs("closedDate").value;
-  const reason = qs("closedReason").value;
-
-  if (!date) return;
-
-  await api("/admin/closed-days", {
-    method: "POST",
-    body: JSON.stringify({ date, reason })
-  });
-
-  STATE.closedDays.push(date);
-  renderClosedDays();
-};
 
 /* ================= ADMIN NAV ================= */
 function openAdmin(id) {
@@ -951,6 +937,34 @@ function openAdmin(id) {
 
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", () => {
+
+const addClosedBtn = qs("addClosedDayBtn");
+if (addClosedBtn) {
+  addClosedBtn.onclick = async () => {
+    const date = qs("closedDate").value;
+    const reason = qs("closedReason").value;
+
+    if (!date) {
+      alert("Seleziona una data");
+      return;
+    }
+
+    await api("/admin/closed-days", {
+      method: "POST",
+      body: JSON.stringify({ date, reason })
+    });
+
+    if (!STATE.closedDays.includes(date)) {
+      STATE.closedDays.push(date);
+    }
+
+    renderClosedDays();
+
+    qs("closedDate").value = "";
+    qs("closedReason").value = "";
+  };
+}
+
 const appLoader = qs("appLoader");
 
   qs("loginBtn").onclick = login;
