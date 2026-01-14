@@ -16,8 +16,9 @@ let STATE = {
   dayReservationsAll: [],
   gallery: [],
   galleryDraft: [],
- closedDays: [],
+  closedDays: [],
 };
+
 
 let AUTO_REFRESH_TIMER = null;
 
@@ -922,6 +923,45 @@ qs("addClosedDayBtn").onclick = async () => {
 
   STATE.closedDays.push(date);
   renderClosedDays();
+};
+qs("addClosedRangeBtn").onclick = async () => {
+  const start = qs("closedStart").value;
+  const end = qs("closedEnd").value;
+  const reason = qs("closedRangeReason").value;
+
+  if (!start || !end) {
+    alert("Seleziona data inizio e fine");
+    return;
+  }
+
+  if (!confirm(`Chiudere il periodo dal ${start} al ${end}?`)) return;
+
+  await api("/admin/closed-days/range", {
+    method: "POST",
+    body: JSON.stringify({
+      startDate: start,
+      endDate: end,
+      reason
+    })
+  });
+
+  // aggiorna stato locale
+  let d = new Date(start);
+  const endD = new Date(end);
+
+  while (d <= endD) {
+    const iso = d.toISOString().slice(0, 10);
+    if (!STATE.closedDays.includes(iso)) {
+      STATE.closedDays.push(iso);
+    }
+    d.setDate(d.getDate() + 1);
+  }
+
+  renderClosedDays();
+
+  qs("closedStart").value = "";
+  qs("closedEnd").value = "";
+  qs("closedRangeReason").value = "";
 };
 
 /* ================= ADMIN NAV ================= */

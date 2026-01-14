@@ -397,5 +397,39 @@ router.delete("/admin/closed-days/:date", requireAdmin, async (req, res) => {
 
   res.json({ ok: true });
 });
+// ADMIN: chiudi periodo (es. ferie)
+router.post("/admin/closed-days/range", requireAdmin, async (req, res) => {
+  const { startDate, endDate, reason } = req.body;
+
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(endDate)
+  ) {
+    return res.status(400).json({ error: "BAD_DATE" });
+  }
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  if (start > end) {
+    return res.status(400).json({ error: "INVALID_RANGE" });
+  }
+
+  const batch = db.batch();
+  const ref = db.collection("admin").doc("closedDays").collection("days");
+
+  let d = new Date(start);
+  while (d <= end) {
+    const iso = d.toISOString().slice(0, 10);
+    batch.set(ref.doc(iso), {
+      reason: reason || "Chiusura",
+      createdAt: FieldValue.serverTimestamp()
+    });
+    d.setDate(d.getDate() + 1);
+  }
+
+  await batch.commit();
+  res.json({ ok: true });
+});
 
 export default router;
