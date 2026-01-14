@@ -16,11 +16,8 @@ let STATE = {
   dayReservationsAll: [],
   gallery: [],
   galleryDraft: [],
-  closedDays: [],
-  closedSlots: [],
-
+ closedDays: [],
 };
-
 
 let AUTO_REFRESH_TIMER = null;
 
@@ -206,20 +203,18 @@ async function login() {
         password: qs("password").value.trim()
       })
     });
-
-    // ✅ NASCONDI LOGIN
-    hide(qs("loginBox"));
-    show(qs("app"));
-    show(qs("logoutBtn"));
-
-    // ✅ CARICA APP SENZA RELOAD
-    await loadAll(true);
-    loadWeather();
-    startAutoRefresh();
-
+    location.reload(); // 🔁 lascia che sia INIT a fare loadAll
   } catch {
-    qs("loginErr").textContent = "Login fallito";
-    show(qs("loginErr"));
+  qs("loginErr").textContent = "Login fallito";
+  show(qs("loginErr"));
+
+  qs("username").classList.add("input-error");
+  qs("password").classList.add("input-error");
+
+  setTimeout(() => {
+    qs("username").classList.remove("input-error");
+    qs("password").classList.remove("input-error");
+  }, 400);
   }
 }
 
@@ -239,23 +234,8 @@ show(qs("skeleton"));
 
   STATE.config = pub;
   STATE.fields = pub.fields || [];
-// POPOLA SELECT CHIUSURE ORARIE
-const sel = qs("closedSlotField");
-if (sel) {
-  sel.innerHTML = `<option value="*">Tutti i campi</option>`;
-  STATE.fields.forEach(f => {
-    const o = document.createElement("option");
-    o.value = f.id;
-    o.textContent = f.name;
-    sel.appendChild(o);
-  });
-}
-
 const closed = await api("/public/closed-days");
 STATE.closedDays = closed.days || [];
-
-const closedSlotsRes = await api("/public/closed-slots");
-STATE.closedSlots = closedSlotsRes.items || [];
   STATE.fieldsDraft = [...STATE.fields];
   STATE.notes = pub.notesText || "";
   STATE.gallery = pub.gallery || [];
@@ -268,8 +248,7 @@ STATE.closedSlots = closedSlotsRes.items || [];
   qs("welcome").textContent = `Ciao ${STATE.me.username}`;
   qs("creditsBox").textContent = `Crediti: ${STATE.me.credits}`;
   qs("roleBadge").textContent = STATE.me.role;
-  qs("notesView").innerText = STATE.notes || "Nessuna comunicazione.";
-
+  qs("notesView").textContent = STATE.notes || "Nessuna comunicazione.";
 
   if (setDateToday || !qs("datePick").value) {
     qs("datePick").value = localISODate();
@@ -286,8 +265,8 @@ if (STATE.fields.length > 0) {
   if (STATE.me.role === "admin") {
     show(qs("adminMenu"));
     qs("cfgSlotMinutes").value = pub.slotMinutes;
-    qs("addRangeBtn").onclick = () => addOpenRange();
-
+    qs("cfgDayStart").value = pub.dayStart;
+    qs("cfgDayEnd").value = pub.dayEnd;
     qs("cfgMaxPerDay").value = pub.maxBookingsPerUserPerDay;
     qs("cfgMaxActive").value = pub.maxActiveBookingsPerUser;
     qs("notesText").value = STATE.notes;
@@ -389,96 +368,100 @@ function renderTimeSelect() {
   sel.innerHTML = "";
 
   const slot = STATE.config.slotMinutes || 45;
-const field = qs("fieldSelect").value;
-const isToday = qs("datePick").value === localISODate();
+  const start = minutes(STATE.config.dayStart || "09:00");
+  const end = minutes(STATE.config.dayEnd || "20:00");
+  const field = qs("fieldSelect").value;
+  const isToday = qs("datePick").value === localISODate();
 
-const taken = new Set(
-  STATE.dayReservationsAll
-    .filter(r => r.fieldId === field)
-    .map(r => r.time)
-);
+  const taken = new Set(
+    STATE.dayReservationsAll
+      .filter(r => r.fieldId === field)
+      .map(r => r.time)
+  );
 
-// usa SOLO le fasce aperte
-const start = minutes(STATE.config.dayStart);
-const end   = minutes(STATE.config.dayEnd);
+  for (let m = start; m + slot <= end; m += slot) {
+    const t = timeStr(m);
+    const o = document.createElement("option");
+    o.value = t;
 
-for (let m = start; m + slot <= end; m += slot) {
-  const t = timeStr(m);
-  const o = document.createElement("option");
-  o.value = t;
+    if (isPastDate(qs("datePick").value)) {
+  o.textContent = `${t} ⛔ Giorno passato`;
+  o.disabled = true;
+}
+else if (isToday && m <= nowMinutes()) {
+  o.textContent = `${t} ⏰ Orario passato`;
+  o.disabled = true;
+}
+ else if (taken.has(t)) {
+      o.textContent = `${t} ❌ Occupato`;
+      o.disabled = true;
+    } else {
+      o.textContent = `${t} ✅ Libero`;
+    }
 
-  if (taken.has(t)) {
-    o.textContent = `${t} ❌ Occupato`;
-    o.disabled = true;
-  } else {
-    o.textContent = `${t} ✅ Libero`;
+    sel.appendChild(o);
   }
-
-  sel.appendChild(o);
 }
-}
-
 
 function renderTimeline(fieldId) {
   const slotMinutes = STATE.config.slotMinutes || 45;
+  const start = minutes(STATE.config.dayStart);
+  const end = minutes(STATE.config.dayEnd);
   const now = nowMinutes();
+
   const box = qs("timeline");
   if (!box) return;
   box.innerHTML = "";
 
   const slots = [];
 
-  // 🔁 usa SOLO le fasce aperte
-  const start = minutes(STATE.config.dayStart);
-const end   = minutes(STATE.config.dayEnd);
+  for (let m = start; m + slotMinutes <= end; m += slotMinutes) {
+    const t = timeStr(m);
+    const el = document.createElement("div");
 
-for (let m = start; m + slotMinutes <= end; m += slotMinutes) {
-  const t = timeStr(m);
-  const el = document.createElement("div");
+    const isBusy = STATE.dayReservationsAll.some(
+      r => r.fieldId === fieldId && r.time === t
+    );
 
-  el.dataset.start = m;
-  el.innerHTML = `<div class="slot-time">${t}</div>`;
+    el.className = "slot " + (isBusy ? "busy" : "free");
+    el.dataset.start = m;
 
-  box.appendChild(el);
-  slots.push(el);
-}
-
-
-  // se non ci sono slot → niente marker
-  if (slots.length === 0) return;
+    el.innerHTML = `<div class="slot-time">${t}</div>`;
+    box.appendChild(el);
+    slots.push(el);
+  }
 
   // === MARKER ORA ===
   const marker = document.createElement("div");
   marker.className = "now-marker";
   box.appendChild(marker);
 
-  const first = slots[0].dataset.start;
-  const last = slots[slots.length - 1].dataset.start;
-
-  if (now < first || now > Number(last) + slotMinutes) {
+  // fuori orario → nasconde
+  if (now < start || now > end) {
     marker.style.display = "none";
     return;
   }
 
-  // trova lo slot corrente
-  const currentSlot = slots.find(s => {
-    const m = Number(s.dataset.start);
-    return now >= m && now < m + slotMinutes;
-  });
-
+  // trova lo slot corretto
+  const currentIndex = Math.floor((now - start) / slotMinutes);
+  const currentSlot = slots[currentIndex];
   if (!currentSlot) {
     marker.style.display = "none";
     return;
   }
 
+  // posiziona la linea sopra lo slot reale
   const slotRect = currentSlot.getBoundingClientRect();
   const boxRect = box.getBoundingClientRect();
 
   marker.style.display = "block";
-  marker.style.left =
-    `${slotRect.left - boxRect.left + slotRect.width / 2}px`;
-  marker.style.top =
-    `${slotRect.top - boxRect.top + (slotRect.height - marker.offsetHeight) / 2}px`;
+
+marker.style.left =
+  `${slotRect.left - boxRect.left + slotRect.width / 2}px`;
+
+marker.style.top =
+  `${slotRect.top - boxRect.top + (slotRect.height - marker.offsetHeight) / 2}px`;
+
 }
 
 /* ===== PRENOTA (UI OTTIMISTICA) ===== */
@@ -525,18 +508,14 @@ if (isPastTimeToday(date, time)) {
 
   } catch (e) {
   qs("bookMsg").textContent =
-    e?.error === "FIELD_CLOSED_TIME"
-      ? `⛔ Campo chiuso in questo orario${e.reason ? ": " + e.reason : ""}`
-      : e?.error === "ACTIVE_BOOKING_LIMIT"
+    e?.error === "ACTIVE_BOOKING_LIMIT"
       ? "Hai raggiunto il limite di prenotazioni attive"
       : e?.error === "MAX_PER_DAY_LIMIT"
       ? "Hai raggiunto il limite di prenotazioni per questo giorno"
       : "Errore prenotazione";
 
-  // 🔄 ricarica stato reale dal server
   await loadReservations();
 }
-
 
 
   qs("bookBtn").disabled = false;
@@ -662,8 +641,7 @@ async function saveNotes() {
   });
 
   STATE.notes = qs("notesText").value;
-  qs("notesView").innerText = STATE.notes || "Nessuna comunicazione.";
-
+  qs("notesView").textContent = STATE.notes || "Nessuna comunicazione.";
 
   alert("Note aggiornate ✅");
 }
@@ -671,55 +649,30 @@ async function saveNotes() {
 
 /* ================= CONFIG ================= */
 async function saveConfig() {
-  const ranges = [...document.querySelectorAll(".range-row")].map(r => ({
-  start: r.querySelector(".rangeStart").value,
-  end: r.querySelector(".rangeEnd").value
-}));
-
-await api("/admin/config", {
-  method: "PUT",
-  body: JSON.stringify({
-  slotMinutes: Number(qs("cfgSlotMinutes").value),
-  dayStart: qs("cfgDayStart").value,
-  dayEnd: qs("cfgDayEnd").value,
-  maxBookingsPerUserPerDay: Number(qs("cfgMaxPerDay").value),
-  maxActiveBookingsPerUser: Number(qs("cfgMaxActive").value)
-})
-
-});
-
+  await api("/admin/config", {
+    method: "PUT",
+    body: JSON.stringify({
+      slotMinutes: Number(qs("cfgSlotMinutes").value),
+      dayStart: qs("cfgDayStart").value,
+      dayEnd: qs("cfgDayEnd").value,
+      maxBookingsPerUserPerDay: Number(qs("cfgMaxPerDay").value),
+      maxActiveBookingsPerUser: Number(qs("cfgMaxActive").value)
+    })
+  });
 
   // 🔄 ricarica config aggiornata
   const pub = await api("/public/config");
   STATE.config = pub;
 
   // 🔁 aggiorna UI che dipende dagli orari
-await loadAll(true);   // forza ricarica data + config
-await loadReservations(); // 🔴 QUESTO MANCAVA
-renderTimeSelect();
-renderFieldInfo();
-
+  renderTimeSelect();
+  renderFieldInfo();
+  await loadReservations();
 
   alert("Configurazione aggiornata ✅");
 }
-function addOpenRange(start = "08:00", end = "12:00") {
-  const box = qs("openRanges");
 
-  const row = document.createElement("div");
-  row.className = "range-row";
-  row.style.display = "flex";
-  row.style.gap = "8px";
-
-  row.innerHTML = `
-    <input type="time" class="rangeStart" value="${start}">
-    <input type="time" class="rangeEnd" value="${end}">
-    <button class="btn-ghost">❌</button>
-  `;
-
-  row.querySelector("button").onclick = () => row.remove();
-  box.appendChild(row);
-}
-
+/* ================= USERS ================= */
 /* ================= USERS ================= */
 
 function renderUsers(filter = "") {
@@ -956,128 +909,25 @@ function renderClosedDays() {
     list.appendChild(el);
   });
 }
-const addClosedDayBtn = qs("addClosedDayBtn");
-if (addClosedDayBtn) {
-  addClosedDayBtn.onclick = async () => {
-    const date = qs("closedDate").value;
-    const reason = qs("closedReason").value;
-    if (!date) return;
+qs("addClosedDayBtn").onclick = async () => {
+  const date = qs("closedDate").value;
+  const reason = qs("closedReason").value;
 
-    await api("/admin/closed-days", {
-      method: "POST",
-      body: JSON.stringify({ date, reason })
-    });
+  if (!date) return;
 
-    STATE.closedDays.push(date);
-    renderClosedDays();
-  };
-}
-
-const addClosedRangeBtn = qs("addClosedRangeBtn");
-if (addClosedRangeBtn) {
-  addClosedRangeBtn.onclick = async () => {
-    const start = qs("closedStart").value;
-    const end = qs("closedEnd").value;
-    const reason = qs("closedRangeReason").value;
-
-    if (!start || !end) {
-      alert("Seleziona data inizio e fine");
-      return;
-    }
-
-    if (!confirm(`Chiudere il periodo dal ${start} al ${end}?`)) return;
-
-    await api("/admin/closed-days/range", {
-      method: "POST",
-      body: JSON.stringify({
-        startDate: start,
-        endDate: end,
-        reason
-      })
-    });
-
-    await loadAll();
-    renderTimeSelect();
-  };
-}
-
-
-  
-/* ================= CLOSED SLOTS (CHIUSURE ORARIE) ================= */
-
-async function loadClosedSlots() {
-  const r = await api("/admin/closed-slots");
-  const box = qs("closedSlotsList");
-  box.innerHTML = "";
-
-  r.items.forEach(c => {
-    const d = document.createElement("div");
-    d.className = "item";
-    d.innerHTML = `
-      <b>${c.fieldId === "*" ? "Tutti i campi" : c.fieldId}</b><br>
-      ${c.startDate} → ${c.endDate}<br>
-      ${c.startTime} – ${c.endTime}<br>
-      <i>${c.reason || ""}</i>
-      <button class="btn-ghost">❌</button>
-    `;
-
-    d.querySelector("button").onclick = async () => {
-  await api(`/admin/closed-slots/${c.id}`, { method: "DELETE" });
-
-  await loadClosedSlots();
-
-  // 🔄 RICARICA STATO + ORARI
-  await loadAll();
-  renderTimeSelect();
-};
-
-
-    box.appendChild(d);
+  await api("/admin/closed-days", {
+    method: "POST",
+    body: JSON.stringify({ date, reason })
   });
-}
 
-const addClosedSlotBtn = qs("addClosedSlotBtn");
-if (addClosedSlotBtn) {
-  addClosedSlotBtn.onclick = async () => {
-    try {
-      await api("/admin/closed-slots", {
-        method: "POST",
-        body: JSON.stringify({
-          fieldId: qs("closedSlotField").value,
-          startDate: qs("closedSlotStartDate").value,
-          endDate: qs("closedSlotEndDate").value,
-          startTime: qs("closedSlotStartTime").value,
-          endTime: qs("closedSlotEndTime").value,
-          reason: qs("closedSlotReason").value
-        })
-      });
-
-      await loadClosedSlots();
-      await loadAll();
-      renderTimeSelect();
-
-      alert("Chiusura oraria salvata ✅");
-    } catch (e) {
-      alert(`Errore salvataggio ❌ (${e?.error || "UNKNOWN"})`);
-    }
-  };
-}
-
-
+  STATE.closedDays.push(date);
+  renderClosedDays();
+};
 
 /* ================= ADMIN NAV ================= */
 function openAdmin(id) {
-  [
-    "adminMenu",
-    "adminConfig",
-    "adminNotes",
-    "adminFields",
-    "adminUsers",
-    "adminGallery",
-    "adminClosedDays",
-    "adminClosedSlots" // 👈 NUOVO
-  ].forEach(s => hide(qs(s)));
-
+  ["adminMenu","adminConfig","adminNotes","adminFields","adminUsers","adminGallery"]
+    .forEach(s => hide(qs(s)));
   show(qs(id));
 }
 
@@ -1107,21 +957,10 @@ if (addAllBtn) {
 
   qs("btnAdminGallery").onclick = () => openAdmin("adminGallery");
 
-const btnAdminClosedDays = qs("btnAdminClosedDays");
-if (btnAdminClosedDays) {
-  btnAdminClosedDays.onclick = () => {
-    openAdmin("adminClosedDays");
-    renderClosedDays();
-  };
-}
-
-const btnAdminClosedSlots = qs("btnAdminClosedSlots");
-if (btnAdminClosedSlots) {
-  btnAdminClosedSlots.onclick = () => {
-    openAdmin("adminClosedSlots");
-    loadClosedSlots();
-  };
-}
+qs("btnAdminClosedDays").onclick = () => {
+  openAdmin("adminClosedDays");
+  renderClosedDays();
+};
 
 
   document.querySelectorAll(".backAdmin")
@@ -1137,35 +976,27 @@ if (btnAdminClosedSlots) {
   // login gallery pubblica
   loadPublicLoginGallery();
 
-  (async () => {
-  try {
-    // 🔍 verifica sessione
-    STATE.me = await api("/me");
-
-    // ✅ SE OK → carica app
-    hide(qs("loginBox"));
-    show(qs("app"));
-    show(qs("logoutBtn"));
-
-    await loadAll(true);
+  // avvio APP
+loadAll(true)
+  .then(() => {
     loadWeather();
-    startAutoRefresh();
 
-  } catch {
-    // ❌ NON loggato → mostra login
+
+    startAutoRefresh();
+  if (appLoader) {
+  appLoader.classList.add("hide");
+  setTimeout(() => appLoader.remove(), 450);
+}
+  })
+  .catch(err => {
+    console.warn("INIT ERROR (non loggato)", err);
+
+    // 👉 MOSTRA LOGIN, NASCONDE APP E LOADER
     show(qs("loginBox"));
     hide(qs("app"));
     hide(qs("logoutBtn"));
-  } finally {
-    // 🔄 chiudi SEMPRE il loader
-    const appLoader = qs("appLoader");
-    if (appLoader) {
-      appLoader.classList.add("hide");
-      setTimeout(() => appLoader.remove(), 450);
-    }
-  }
-})();
-
+    hide(appLoader);
+  });
 qs("userSearch").addEventListener("input", e => {
   renderUsers(e.target.value);
 });
