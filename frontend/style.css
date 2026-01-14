@@ -142,7 +142,8 @@ h4{ font-size: 16px; }
 .muted{
   color: var(--muted);
   font-size: 14px;
-  line-height: 1.35;
+  line-height: 1.45;
+  white-space: pre-line; /* 👈 QUESTO È IL FIX */
 }
 
 /* ===== Badge ===== */
