@@ -235,6 +235,18 @@ show(qs("skeleton"));
 
   STATE.config = pub;
   STATE.fields = pub.fields || [];
+// POPOLA SELECT CHIUSURE ORARIE
+const sel = qs("closedSlotField");
+if (sel) {
+  sel.innerHTML = `<option value="*">Tutti i campi</option>`;
+  STATE.fields.forEach(f => {
+    const o = document.createElement("option");
+    o.value = f.id;
+    o.textContent = f.name;
+    sel.appendChild(o);
+  });
+}
+
 const closed = await api("/public/closed-days");
 STATE.closedDays = closed.days || [];
   STATE.fieldsDraft = [...STATE.fields];
@@ -947,6 +959,7 @@ qs("addClosedRangeBtn").onclick = async () => {
     })
   });
 
+
   // aggiorna stato locale
   let d = new Date(start);
   const endD = new Date(end);
@@ -966,6 +979,50 @@ qs("addClosedRangeBtn").onclick = async () => {
   qs("closedRangeReason").value = "";
 };
 
+/* ================= CLOSED SLOTS (CHIUSURE ORARIE) ================= */
+
+async function loadClosedSlots() {
+  const r = await api("/admin/closed-slots");
+  const box = qs("closedSlotsList");
+  box.innerHTML = "";
+
+  r.items.forEach(c => {
+    const d = document.createElement("div");
+    d.className = "item";
+    d.innerHTML = `
+      <b>${c.fieldId === "*" ? "Tutti i campi" : c.fieldId}</b><br>
+      ${c.startDate} → ${c.endDate}<br>
+      ${c.startTime} – ${c.endTime}<br>
+      <i>${c.reason || ""}</i>
+      <button class="btn-ghost">❌</button>
+    `;
+
+    d.querySelector("button").onclick = async () => {
+      await api(`/admin/closed-slots/${c.id}`, { method: "DELETE" });
+      loadClosedSlots();
+    };
+
+    box.appendChild(d);
+  });
+}
+
+qs("addClosedSlotBtn").onclick = async () => {
+  await api("/admin/closed-slots", {
+    method: "POST",
+    body: JSON.stringify({
+      fieldId: qs("closedSlotField").value,
+      startDate: qs("closedSlotStartDate").value,
+      endDate: qs("closedSlotEndDate").value,
+      startTime: qs("closedSlotStartTime").value,
+      endTime: qs("closedSlotEndTime").value,
+      reason: qs("closedSlotReason").value
+    })
+  });
+
+  loadClosedSlots();
+};
+
+
 /* ================= ADMIN NAV ================= */
 function openAdmin(id) {
   [
@@ -975,7 +1032,8 @@ function openAdmin(id) {
     "adminFields",
     "adminUsers",
     "adminGallery",
-    "adminClosedDays"   // 👈 FIX
+    "adminClosedDays",
+    "adminClosedSlots" // 👈 NUOVO
   ].forEach(s => hide(qs(s)));
 
   show(qs(id));
@@ -1010,6 +1068,10 @@ if (addAllBtn) {
 qs("btnAdminClosedDays").onclick = () => {
   openAdmin("adminClosedDays");
   renderClosedDays();
+};
+qs("btnAdminClosedSlots").onclick = () => {
+  openAdmin("adminClosedSlots");
+  loadClosedSlots();
 };
 
 

@@ -111,6 +111,9 @@
     <button id="btnAdminUsers" class="btn">Utenti</button>
     <button id="btnAdminGallery" class="btn">Galleria Login</button>
 <button id="btnAdminClosedDays" class="btn">Giorni chiusi</button>
+<button id="btnAdminClosedSlots" class="btn">
+  Chiusure orarie
+</button>
 
   </section>
 
@@ -178,6 +181,8 @@
     <button class="btn-ghost backAdmin">⬅ Indietro</button>
   </section>
 <section id="adminClosedDays" class="card hidden">
+
+
   <h4>⛔ Giorni di chiusura</h4>
 
   <input type="date" id="closedDate">
@@ -196,6 +201,32 @@
   <input type="text" id="closedRangeReason">
 
   <button id="addClosedRangeBtn" class="btn">Chiudi periodo</button>
+
+  <button class="btn-ghost backAdmin">⬅ Indietro</button>
+</section>
+<!-- ADMIN CLOSED SLOTS (CHIUSURE ORARIE) -->
+<section id="adminClosedSlots" class="card hidden">
+  <h4>⏰ Chiusure orarie campi</h4>
+
+  <select id="closedSlotField"></select>
+
+  <input type="date" id="closedSlotStartDate">
+  <input type="date" id="closedSlotEndDate">
+
+  <input type="time" id="closedSlotStartTime">
+  <input type="time" id="closedSlotEndTime">
+
+  <input
+    type="text"
+    id="closedSlotReason"
+    placeholder="Motivo (es. Manutenzione)"
+  >
+
+  <button id="addClosedSlotBtn" class="btn">
+    ➕ Aggiungi chiusura oraria
+  </button>
+
+  <div id="closedSlotsList" class="list"></div>
 
   <button class="btn-ghost backAdmin">⬅ Indietro</button>
 </section>
