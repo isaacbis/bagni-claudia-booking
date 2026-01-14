@@ -1,4 +1,3 @@
-
 /* ================= CONFIG ================= */
 const API = "/api";
 const qs = id => document.getElementById(id);
@@ -16,8 +15,7 @@ let STATE = {
   reservations: [],
   dayReservationsAll: [],
   gallery: [],
-  galleryDraft: [],
-  closedDays: []          // 👈 AGGIUNTO
+  galleryDraft: []
 };
 
 let AUTO_REFRESH_TIMER = null;
@@ -37,7 +35,7 @@ function startAutoRefresh() {
       // se la sessione è scaduta o il server dorme, non blocchiamo la UI
       console.warn("Auto-refresh fallito", e);
     }
-  }, 2_000);
+  }, 5_000);
 }
 
 function stopAutoRefresh() {
@@ -234,12 +232,7 @@ show(qs("skeleton"));
   const pub = await api("/public/config");
 
   STATE.config = pub;
-STATE.fields = pub.fields || [];
-
-// 👇 AGGIUNGI QUESTO
-const closed = await api("/public/closed-days");
-STATE.closedDays = closed.days || [];
-
+  STATE.fields = pub.fields || [];
   STATE.fieldsDraft = [...STATE.fields];
   STATE.notes = pub.notesText || "";
   STATE.gallery = pub.gallery || [];
@@ -252,9 +245,7 @@ STATE.closedDays = closed.days || [];
   qs("welcome").textContent = `Ciao ${STATE.me.username}`;
   qs("creditsBox").textContent = `Crediti: ${STATE.me.credits}`;
   qs("roleBadge").textContent = STATE.me.role;
-  qs("notesView").innerHTML =
-  (STATE.notes || "Nessuna comunicazione.").replace(/\n/g, "<br>");
-
+  qs("notesView").textContent = STATE.notes || "Nessuna comunicazione.";
 
   if (setDateToday || !qs("datePick").value) {
     qs("datePick").value = localISODate();
@@ -292,20 +283,6 @@ hide(qs("skeleton"));
 /* ================= RESERVATIONS ================= */
 async function loadReservations() {
   const date = qs("datePick").value;
-
-// ⛔ BLOCCO GIORNI CHIUSI
-if (STATE.closedDays.includes(date)) {
-  qs("bookBtn").disabled = true;
-  qs("bookMsg").textContent = "⛔ Struttura chiusa per questa data";
-
-  STATE.dayReservationsAll = [];
-  STATE.reservations = [];
-
-  renderTimeSelect();
-  renderReservations();
-  renderFieldInfo();
-  return;
-}
 
   // ❌ BLOCCO GIORNI PASSATI
   if (isPastDate(date)) {
@@ -476,17 +453,17 @@ async function book() {
   const date = qs("datePick").value;
   const time = qs("timeSelect").value;
 
+  // ❌ BLOCCO GIORNI PASSATI
   if (isPastDate(date)) {
-    qs("bookMsg").textContent = "❌ Non puoi prenotare un giorno passato";
-    return;
-  }
+  qs("bookMsg").textContent = "❌ Non puoi prenotare un giorno passato";
+  return;
+}
 
-  if (isPastTimeToday(date, time)) {
-    qs("bookMsg").textContent = "❌ Orario già passato";
-    return;
-  }
+if (isPastTimeToday(date, time)) {
+  qs("bookMsg").textContent = "❌ Orario già passato";
+  return;
+}
 
-  stopAutoRefresh(); // ✅ QUI È GIUSTO
 
   qs("bookBtn").disabled = true;
   qs("bookBtn").textContent = "Salvataggio…";
@@ -502,16 +479,17 @@ async function book() {
   renderReservations();
   renderTimeSelect();
 
-try {
-  await api("/reservations", {
-    method: "POST",
-    body: JSON.stringify({ fieldId, date, time })
-  });
+  try {
+    await api("/reservations", {
+      method: "POST",
+      body: JSON.stringify({ fieldId, date, time })
+    });
 
-  qs("bookMsg").textContent = "Prenotazione effettuata ✅";
-  await refreshCredits();
+    qs("bookMsg").textContent = "Prenotazione effettuata ✅";
+    await refreshCredits();
+    await loadReservations();
 
-} catch (e) {
+  } catch (e) {
   qs("bookMsg").textContent =
     e?.error === "ACTIVE_BOOKING_LIMIT"
       ? "Hai raggiunto il limite di prenotazioni attive"
@@ -519,17 +497,12 @@ try {
       ? "Hai raggiunto il limite di prenotazioni per questo giorno"
       : "Errore prenotazione";
 
-} finally {
-  // 🔁 SEMPRE eseguito
-  try {
-    await loadReservations();
-  } catch {}
+  await loadReservations();
+}
 
-  startAutoRefresh(); 
 
   qs("bookBtn").disabled = false;
   qs("bookBtn").textContent = "Prenota";
- }
 }
 
 async function deleteReservation(id) {
@@ -651,9 +624,7 @@ async function saveNotes() {
   });
 
   STATE.notes = qs("notesText").value;
-  qs("notesView").innerHTML =
-  (STATE.notes || "Nessuna comunicazione.").replace(/\n/g, "<br>");
-
+  qs("notesView").textContent = STATE.notes || "Nessuna comunicazione.";
 
   alert("Note aggiornate ✅");
 }
@@ -899,74 +870,16 @@ async function saveGallery() {
     body: JSON.stringify({ images: STATE.galleryDraft })
   });
 }
-function renderClosedDays() {
-  const list = qs("closedDaysList");
-  list.innerHTML = "";
-
-  STATE.closedDays.forEach(d => {
-    const el = document.createElement("div");
-    el.className = "item";
-    el.textContent = d;
-
-    const b = document.createElement("button");
-    b.className = "btn-ghost";
-    b.textContent = "❌";
-    b.onclick = async () => {
-      await api(`/admin/closed-days/${d}`, { method: "DELETE" });
-      STATE.closedDays = STATE.closedDays.filter(x => x !== d);
-      renderClosedDays();
-    };
-
-    el.appendChild(b);
-    list.appendChild(el);
-  });
-}
 
 /* ================= ADMIN NAV ================= */
 function openAdmin(id) {
-  [
-    "adminMenu",
-    "adminConfig",
-    "adminNotes",
-    "adminFields",
-    "adminUsers",
-    "adminGallery",
-    "adminClosedDays"   // 👈 FIX FONDAMENTALE
-  ].forEach(s => hide(qs(s)));
-
+  ["adminMenu","adminConfig","adminNotes","adminFields","adminUsers","adminGallery"]
+    .forEach(s => hide(qs(s)));
   show(qs(id));
 }
 
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", () => {
-
-const addClosedBtn = qs("addClosedDayBtn");
-if (addClosedBtn) {
-  addClosedBtn.onclick = async () => {
-    const date = qs("closedDate").value;
-    const reason = qs("closedReason").value;
-
-    if (!date) {
-      alert("Seleziona una data");
-      return;
-    }
-
-    await api("/admin/closed-days", {
-      method: "POST",
-      body: JSON.stringify({ date, reason })
-    });
-
-    if (!STATE.closedDays.includes(date)) {
-      STATE.closedDays.push(date);
-    }
-
-    renderClosedDays();
-
-    qs("closedDate").value = "";
-    qs("closedReason").value = "";
-  };
-}
-
 const appLoader = qs("appLoader");
 
   qs("loginBtn").onclick = login;
@@ -990,12 +903,6 @@ if (addAllBtn) {
 
 
   qs("btnAdminGallery").onclick = () => openAdmin("adminGallery");
-
-qs("btnAdminClosedDays").onclick = () => {
-  openAdmin("adminClosedDays");
-  renderClosedDays();
-};
-
 
   document.querySelectorAll(".backAdmin")
     .forEach(b => b.onclick = () => openAdmin("adminMenu"));
@@ -1033,16 +940,6 @@ loadAll(true)
   });
 qs("userSearch").addEventListener("input", e => {
   renderUsers(e.target.value);
-});
-
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) {
-    loadReservations();
-  }
-});
-
-window.addEventListener("focus", () => {
-  loadReservations();
 });
 
   // 🔁 KEEP SERVER SVEGLIO (Render free)

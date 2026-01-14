@@ -166,73 +166,38 @@ router.get("/reservations", requireAuth, async (req, res) => {
 });
 
 router.post("/reservations", requireAuth, async (req, res) => {
-  const { fieldId, date, time } = req.body;
+  await cleanupExpiredReservations();
 
-  // ✅ utente corretto (session)
+  const schema = z.object({
+    fieldId: z.string(),
+    date: z.string(),
+    time: z.string()
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "BAD_BODY" });
+
+  const { fieldId, date, time } = parsed.data;
   const username = req.session.user.username;
+  const isAdmin = req.session.user.role === "admin";
 
-  // ✅ valida data/ora base
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ""))) {
-    return res.status(400).json({ error: "BAD_DATE" });
-  }
-  if (!/^\d{2}:\d{2}$/.test(String(time || ""))) {
-    return res.status(400).json({ error: "BAD_TIME" });
-  }
-  if (!fieldId) {
-    return res.status(400).json({ error: "BAD_FIELD" });
+  const id = `${fieldId}_${date}_${time}`;
+  const ref = db.collection("reservations").doc(id);
+  if ((await ref.get()).exists) {
+    return res.status(409).json({ error: "SLOT_TAKEN" });
   }
 
-  // ✅ carica config dal posto giusto
-  const cfgSnap = await db.collection("admin").doc("config").get();
-  const cfg = cfgSnap.exists ? cfgSnap.data() : {};
-
-  const maxPerDay = Number(cfg.maxBookingsPerUserPerDay || 1);
-  const maxActive = Number(cfg.maxActiveBookingsPerUser || 1);
-
-  // ✅ usa la tua localISODate() (timezone ok)
-  const today = localISODate();
-
-  // 🔹 prenotazioni attive future (>= oggi)
-  const activeSnap = await db
-    .collection("reservations")
-    .where("user", "==", username)
-    .where("date", ">=", today)
-    .get();
-
-  if (activeSnap.size >= maxActive) {
-    return res.status(400).json({ error: "ACTIVE_BOOKING_LIMIT" });
-  }
-
-  // 🔹 prenotazioni in quel giorno
-  const daySnap = await db
-    .collection("reservations")
-    .where("user", "==", username)
-    .where("date", "==", date)
-    .get();
-
-  if (daySnap.size >= maxPerDay) {
-    return res.status(400).json({ error: "MAX_PER_DAY_LIMIT" });
-  }
-
-  // 🔹 impedisci doppia prenotazione stesso slot/campo
-  const clash = await db
-    .collection("reservations")
-    .where("date", "==", date)
-    .where("fieldId", "==", fieldId)
-    .where("time", "==", time)
-    .get();
-
-  if (!clash.empty) {
-    return res.status(400).json({ error: "SLOT_TAKEN" });
-  }
-
-  await db.collection("reservations").add({
+  await ref.set({
     fieldId,
     date,
     time,
     user: username,
     createdAt: FieldValue.serverTimestamp()
   });
+
+  if (!isAdmin) {
+    await db.collection("users").doc(username)
+      .update({ credits: FieldValue.increment(-1) });
+  }
 
   res.json({ ok: true });
 });
@@ -385,52 +350,6 @@ router.post("/admin/users/add-credits-all", requireAdmin, async (req, res) => {
 
   await batch.commit();
   res.json({ updated: snap.size });
-});
-/* =================== CLOSED DAYS =================== */
-
-// PUBLIC: giorni chiusi
-router.get("/public/closed-days", async (req, res) => {
-  const snap = await db
-    .collection("admin")
-    .doc("closedDays")
-    .collection("days")
-    .get();
-
-  const days = snap.docs.map(d => d.id);
-  res.json({ days });
-});
-
-// ADMIN: chiudi giorno
-router.post("/admin/closed-days", requireAdmin, async (req, res) => {
-  const { date, reason } = req.body;
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return res.status(400).json({ error: "BAD_DATE" });
-  }
-
-  await db
-    .collection("admin")
-    .doc("closedDays")
-    .collection("days")
-    .doc(date)
-    .set({
-      reason: reason || "",
-      createdAt: FieldValue.serverTimestamp()
-    });
-
-  res.json({ ok: true });
-});
-
-// ADMIN: riapri giorno
-router.delete("/admin/closed-days/:date", requireAdmin, async (req, res) => {
-  await db
-    .collection("admin")
-    .doc("closedDays")
-    .collection("days")
-    .doc(req.params.date)
-    .delete();
-
-  res.json({ ok: true });
 });
 
 export default router;
