@@ -206,18 +206,20 @@ async function login() {
         password: qs("password").value.trim()
       })
     });
-    location.reload(); // 🔁 lascia che sia INIT a fare loadAll
+
+    // ✅ NASCONDI LOGIN
+    hide(qs("loginBox"));
+    show(qs("app"));
+    show(qs("logoutBtn"));
+
+    // ✅ CARICA APP SENZA RELOAD
+    await loadAll(true);
+    loadWeather();
+    startAutoRefresh();
+
   } catch {
-  qs("loginErr").textContent = "Login fallito";
-  show(qs("loginErr"));
-
-  qs("username").classList.add("input-error");
-  qs("password").classList.add("input-error");
-
-  setTimeout(() => {
-    qs("username").classList.remove("input-error");
-    qs("password").classList.remove("input-error");
-  }, 400);
+    qs("loginErr").textContent = "Login fallito";
+    show(qs("loginErr"));
   }
 }
 
