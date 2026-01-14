@@ -284,8 +284,13 @@ if (STATE.fields.length > 0) {
   if (STATE.me.role === "admin") {
     show(qs("adminMenu"));
     qs("cfgSlotMinutes").value = pub.slotMinutes;
-    qs("cfgDayStart").value = pub.dayStart;
-    qs("cfgDayEnd").value = pub.dayEnd;
+    qs("openRanges").innerHTML = "";
+
+(pub.openRanges || [
+  { start: pub.dayStart, end: pub.dayEnd }
+]).forEach(r => addOpenRange(r.start, r.end));
+qs("addRangeBtn").onclick = () => addOpenRange();
+
     qs("cfgMaxPerDay").value = pub.maxBookingsPerUserPerDay;
     qs("cfgMaxActive").value = pub.maxActiveBookingsPerUser;
     qs("notesText").value = STATE.notes;
@@ -387,16 +392,19 @@ function renderTimeSelect() {
   sel.innerHTML = "";
 
   const slot = STATE.config.slotMinutes || 45;
-  const start = minutes(STATE.config.dayStart || "09:00");
-  const end = minutes(STATE.config.dayEnd || "20:00");
-  const field = qs("fieldSelect").value;
-  const isToday = qs("datePick").value === localISODate();
+const field = qs("fieldSelect").value;
+const isToday = qs("datePick").value === localISODate();
 
-  const taken = new Set(
-    STATE.dayReservationsAll
-      .filter(r => r.fieldId === field)
-      .map(r => r.time)
-  );
+const taken = new Set(
+  STATE.dayReservationsAll
+    .filter(r => r.fieldId === field)
+    .map(r => r.time)
+);
+
+// usa SOLO le fasce aperte
+STATE.config.openRanges.forEach(r => {
+  const start = minutes(r.start);
+  const end = minutes(r.end);
 
   for (let m = start; m + slot <= end; m += slot) {
     const t = timeStr(m);
@@ -404,41 +412,40 @@ function renderTimeSelect() {
     o.value = t;
 
     if (isPastDate(qs("datePick").value)) {
-  o.textContent = `${t} ⛔ Giorno passato`;
-  o.disabled = true;
-}
-else if (isToday && m <= nowMinutes()) {
-  o.textContent = `${t} ⏰ Orario passato`;
-  o.disabled = true;
-}
- else if (taken.has(t)) {
+      o.textContent = `${t} ⛔ Giorno passato`;
+      o.disabled = true;
+    }
+    else if (isToday && m <= nowMinutes()) {
+      o.textContent = `${t} ⏰ Orario passato`;
+      o.disabled = true;
+    }
+    else if (taken.has(t)) {
       o.textContent = `${t} ❌ Occupato`;
       o.disabled = true;
-    } else {
-  const mTime = minutes(t);
-  const date = qs("datePick").value;
+    }
+    else {
+      const mTime = minutes(t);
+      const date = qs("datePick").value;
 
-  const isClosed = STATE.closedSlots.some(c => {
-    if (c.fieldId !== "*" && c.fieldId !== field) return false;
-    if (date < c.startDate || date > c.endDate) return false;
+      const isClosed = STATE.closedSlots.some(c => {
+        if (c.fieldId !== "*" && c.fieldId !== field) return false;
+        if (date < c.startDate || date > c.endDate) return false;
 
-    const from = minutes(c.startTime);
-    const to = minutes(c.endTime);
+        const from = minutes(c.startTime);
+        const to = minutes(c.endTime);
+        return mTime >= from && mTime < to;
+      });
 
-    return mTime >= from && mTime < to;
-  });
+      // ⛔ chiuso → NON MOSTRARLO
+      if (isClosed) return;
 
-  // ⛔ se chiuso → NON MOSTRARLO
-  if (isClosed) {
-    continue; // ← sparisce completamente
+      o.textContent = `${t} ✅ Libero`;
+    }
+
+    sel.appendChild(o);
   }
+});
 
-  o.textContent = `${t} ✅ Libero`;
-}
-sel.appendChild(o);
-
-  }
-}
 
 function renderTimeline(fieldId) {
   const slotMinutes = STATE.config.slotMinutes || 45;
@@ -691,16 +698,21 @@ async function saveNotes() {
 
 /* ================= CONFIG ================= */
 async function saveConfig() {
-  await api("/admin/config", {
-    method: "PUT",
-    body: JSON.stringify({
-      slotMinutes: Number(qs("cfgSlotMinutes").value),
-      dayStart: qs("cfgDayStart").value,
-      dayEnd: qs("cfgDayEnd").value,
-      maxBookingsPerUserPerDay: Number(qs("cfgMaxPerDay").value),
-      maxActiveBookingsPerUser: Number(qs("cfgMaxActive").value)
-    })
-  });
+  const ranges = [...document.querySelectorAll(".range-row")].map(r => ({
+  start: r.querySelector(".rangeStart").value,
+  end: r.querySelector(".rangeEnd").value
+}));
+
+await api("/admin/config", {
+  method: "PUT",
+  body: JSON.stringify({
+    slotMinutes: Number(qs("cfgSlotMinutes").value),
+    openRanges: ranges,
+    maxBookingsPerUserPerDay: Number(qs("cfgMaxPerDay").value),
+    maxActiveBookingsPerUser: Number(qs("cfgMaxActive").value)
+  })
+});
+
 
   // 🔄 ricarica config aggiornata
   const pub = await api("/public/config");
@@ -714,8 +726,24 @@ renderFieldInfo();
 
   alert("Configurazione aggiornata ✅");
 }
+function addOpenRange(start = "08:00", end = "12:00") {
+  const box = qs("openRanges");
 
-/* ================= USERS ================= */
+  const row = document.createElement("div");
+  row.className = "range-row";
+  row.style.display = "flex";
+  row.style.gap = "8px";
+
+  row.innerHTML = `
+    <input type="time" class="rangeStart" value="${start}">
+    <input type="time" class="rangeEnd" value="${end}">
+    <button class="btn-ghost">❌</button>
+  `;
+
+  row.querySelector("button").onclick = () => row.remove();
+  box.appendChild(row);
+}
+
 /* ================= USERS ================= */
 
 function renderUsers(filter = "") {
