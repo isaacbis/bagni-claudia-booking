@@ -522,14 +522,18 @@ if (isPastTimeToday(date, time)) {
 
   } catch (e) {
   qs("bookMsg").textContent =
-    e?.error === "ACTIVE_BOOKING_LIMIT"
+    e?.error === "FIELD_CLOSED_TIME"
+      ? `⛔ Campo chiuso in questo orario${e.reason ? ": " + e.reason : ""}`
+      : e?.error === "ACTIVE_BOOKING_LIMIT"
       ? "Hai raggiunto il limite di prenotazioni attive"
       : e?.error === "MAX_PER_DAY_LIMIT"
       ? "Hai raggiunto il limite di prenotazioni per questo giorno"
       : "Errore prenotazione";
 
+  // 🔄 ricarica stato reale dal server
   await loadReservations();
 }
+
 
 
   qs("bookBtn").disabled = false;
