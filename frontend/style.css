@@ -88,15 +88,19 @@ body::after{
 }
 .brand{
   font-family: 'Montserrat', sans-serif;
-  font-weight: 400;              /* Bagni normale */
-  font-size: 20px;
-  letter-spacing: 0.15em;
+  font-weight: 300;
+  font-size: clamp(16px, 4.5vw, 20px); /* 👈 SCALA AUTOMATICA */
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #ffffff;                /* 👈 Bagni BIANCO */
-  -webkit-text-fill-color: #ffffff;
-  background: none;              /* 👈 rimosso gradiente */
-  text-shadow: 0 10px 30px rgba(255,255,255,.15);
+  color: #ffffff;
+  white-space: nowrap;
 }
+
+.brand-claudia{
+  font-weight: 600;   /* solo Claudia più forte */
+  letter-spacing: 0.08em;
+}
+
 /* ===== Layout ===== */
 .wrap{
   max-width: 820px;
@@ -703,23 +707,6 @@ button:active{ transform: scale(.97); }
   border: 1px solid rgba(255,255,255,0.1);
   padding: 6px;
 }
-/* ===== BRAND CLAUDIA FIX ===== */
-.brand-claudia {
-  color: #ffffff !important;
-  font-weight: 600;               /* 👈 SOLO Claudia in grassetto */
-  letter-spacing: 0.12em;
-  -webkit-text-fill-color: #ffffff;
-  background: none !important;
-}
-.brand {
-  font-weight: 300;
-  letter-spacing: 0.16em;
-}
-
-.brand-claudia {
-  font-weight: 600;
-  letter-spacing: 0.12em;
-}
 /* ================= LOADER ANIMATO ================= */
 .app-loader {
   position: fixed;
@@ -997,4 +984,8 @@ body{
 
 .login-success{
   animation: popIn .35s var(--ease);
+}
+#notesView{
+  white-space: pre-line; /* 👈 rispetta gli a capo */
+  line-height: 1.5;
 }
