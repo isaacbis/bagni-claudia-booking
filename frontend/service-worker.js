@@ -6,8 +6,8 @@ const ASSETS = [
   "/index.html",
   "/style.css",
   "/script.js",
-  "/icon-192-v2.png",
-  "/icon-512-v2.png"
+  "/icon-192-v3.png",
+  "/icon-512-v3.png"
 ];
 
 // Install
