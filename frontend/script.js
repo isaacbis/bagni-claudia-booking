@@ -630,24 +630,23 @@ async function saveNotes() {
 /* ================= CONFIG ================= */
 async function saveConfig() {
   await api("/admin/config", {
-  method: "PUT",
-  body: JSON.stringify({
-    slotMinutes: Number(qs("cfgSlotMinutes").value),
-    timeRanges: [
-      {
-        start: qs("cfgMorningStart").value,
-        end: qs("cfgMorningEnd").value
-      },
-      {
-        start: qs("cfgAfternoonStart").value,
-        end: qs("cfgAfternoonEnd").value
-      }
-    ],
-    maxBookingsPerUserPerDay: Number(qs("cfgMaxPerDay").value),
-    maxActiveBookingsPerUser: Number(qs("cfgMaxActive").value)
-  })
-});
-
+    method: "PUT",
+    body: JSON.stringify({
+      slotMinutes: Number(qs("cfgSlotMinutes").value),
+      timeRanges: [
+        {
+          start: qs("cfgMorningStart").value,
+          end: qs("cfgMorningEnd").value
+        },
+        {
+          start: qs("cfgAfternoonStart").value,
+          end: qs("cfgAfternoonEnd").value
+        }
+      ],
+      maxBookingsPerUserPerDay: Number(qs("cfgMaxPerDay").value),
+      maxActiveBookingsPerUser: Number(qs("cfgMaxActive").value)
+    })
+  });
 
   // 🔄 ricarica config aggiornata
   const pub = await api("/public/config");
