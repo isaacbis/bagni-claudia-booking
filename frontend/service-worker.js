@@ -1,4 +1,4 @@
-const CACHE_NAME = "bagni-claudia-pwa-v4";
+const CACHE_NAME = "bagni-claudia-pwa-v5";
 
 
 const ASSETS = [
@@ -6,8 +6,8 @@ const ASSETS = [
   "/index.html",
   "/style.css",
   "/script.js",
-  "/icon-192.png",
-  "/icon-512.png"
+  "/icon-192-v2.png",
+  "/icon-512-v2.png"
 ];
 
 // Install
