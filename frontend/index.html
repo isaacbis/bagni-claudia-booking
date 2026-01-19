@@ -117,8 +117,14 @@ Login</button>
   <section id="adminConfig" class="card hidden">
     <h4>Configurazione</h4>
     <input id="cfgSlotMinutes" type="number" placeholder="Durata slot (min)">
-    <input id="cfgDayStart" type="time">
-    <input id="cfgDayEnd" type="time">
+    <h5>Fascia mattina</h5>
+<input id="cfgMorningStart" type="time">
+<input id="cfgMorningEnd" type="time">
+
+<h5>Fascia pomeriggio</h5>
+<input id="cfgAfternoonStart" type="time">
+<input id="cfgAfternoonEnd" type="time">
+
     <input id="cfgMaxPerDay" type="number" placeholder="Max prenotazioni/giorno">
     <input id="cfgMaxActive" type="number" placeholder="Max prenotazioni attive">
     <button id="saveConfigBtn" class="btn">Salva</button>
