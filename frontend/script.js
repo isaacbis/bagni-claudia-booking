@@ -795,6 +795,23 @@ async function addCreditsToAllUsers() {
   }
 }
 
+
+async function setCreditsToAllUsers() {
+  if (!confirm("Impostare TUTTI gli utenti a 70 crediti?")) return;
+
+  try {
+    const res = await api("/admin/users/set-credits-all", {
+      method: "POST",
+      body: JSON.stringify({ credits: 70 })
+    });
+
+    alert(`✅ ${res.updated} utenti impostati a 70 crediti`);
+    loadUsers();
+  } catch (e) {
+    alert("❌ Errore durante l’operazione");
+  }
+}
+
 /* ================= GALLERY ================= */
 function renderLoginGallery() {
   const box = qs("loginGallery");
@@ -903,6 +920,10 @@ const appLoader = qs("appLoader");
 const addAllBtn = qs("addCreditsAllBtn");
 if (addAllBtn) {
   addAllBtn.onclick = addCreditsToAllUsers;
+}
+const setAllBtn = qs("setCreditsAllBtn");
+if (setAllBtn) {
+  setAllBtn.onclick = setCreditsToAllUsers;
 }
 
 

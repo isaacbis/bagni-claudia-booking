@@ -403,4 +403,26 @@ router.post("/admin/users/add-credits-all", requireAdmin, async (req, res) => {
   res.json({ updated: snap.size });
 });
 
+
+// =================== ADMIN SET CREDITI A TUTTI ===================
+router.post("/admin/users/set-credits-all", requireAdmin, async (req, res) => {
+  const { credits } = req.body;
+
+  if (typeof credits !== "number" || credits < 0) {
+    return res.status(400).json({ error: "INVALID_CREDITS" });
+  }
+
+  const snap = await db.collection("users").get();
+  const batch = db.batch();
+
+  snap.forEach(doc => {
+    batch.update(doc.ref, { credits });
+  });
+
+  await batch.commit();
+
+  res.json({ ok: true, updated: snap.size });
+});
+
+
 export default router;
