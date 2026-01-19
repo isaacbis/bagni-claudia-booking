@@ -52,6 +52,15 @@ function localISODate(d = new Date()) {
   const tz = d.getTimezoneOffset() * 60000;
   return new Date(d.getTime() - tz).toISOString().slice(0, 10);
 }
+
+function maxDatePlus(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+}
+
+
 function nowMinutes() {
   const d = new Date();
   return d.getHours() * 60 + d.getMinutes();
@@ -248,8 +257,12 @@ show(qs("skeleton"));
   qs("notesView").textContent = STATE.notes || "Nessuna comunicazione.";
 
   if (setDateToday || !qs("datePick").value) {
-    qs("datePick").value = localISODate();
-  }
+  qs("datePick").value = localISODate();
+}
+
+qs("datePick").min = localISODate();
+qs("datePick").max = maxDatePlus(7);
+
 
 renderFields();
 
@@ -298,8 +311,17 @@ async function loadReservations() {
     return;
   }
 
-  qs("bookBtn").disabled = false;
-  qs("bookMsg").textContent = "";
+  const max = maxDatePlus(7);
+if (qs("datePick").value > max) {
+  qs("bookBtn").disabled = true;
+  qs("bookMsg").textContent =
+    "❌ Puoi prenotare massimo 7 giorni in anticipo";
+  return;
+}
+
+qs("bookBtn").disabled = false;
+qs("bookMsg").textContent = "";
+
 
   const res = await api(`/reservations?date=${date}`);
 
@@ -490,12 +512,14 @@ if (isPastTimeToday(date, time)) {
     await loadReservations();
 
   } catch (e) {
-  qs("bookMsg").textContent =
-    e?.error === "ACTIVE_BOOKING_LIMIT"
-      ? "Hai raggiunto il limite di prenotazioni attive"
-      : e?.error === "MAX_PER_DAY_LIMIT"
-      ? "Hai raggiunto il limite di prenotazioni per questo giorno"
-      : "Errore prenotazione";
+qs("bookMsg").textContent =
+  e?.error === "MAX_7_DAYS_AHEAD"
+    ? "❌ Prenotazioni consentite solo entro 7 giorni"
+    : e?.error === "ACTIVE_BOOKING_LIMIT"
+    ? "Hai raggiunto il limite di prenotazioni attive"
+    : e?.error === "MAX_PER_DAY_LIMIT"
+    ? "Hai raggiunto il limite di prenotazioni per questo giorno"
+    : "Errore prenotazione";
 
   await loadReservations();
 }

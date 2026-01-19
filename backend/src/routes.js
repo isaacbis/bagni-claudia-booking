@@ -178,9 +178,19 @@ router.post("/reservations", requireAuth, async (req, res) => {
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "BAD_BODY" });
 
-  const { fieldId, date, time } = parsed.data;
-  const username = req.session.user.username;
-  const isAdmin = req.session.user.role === "admin";
+const { fieldId, date, time } = parsed.data;
+const username = req.session.user.username;
+const isAdmin = req.session.user.role === "admin";
+
+// ===== LIMITE PRENOTAZIONE: MAX 7 GIORNI AVANTI =====
+const today = localISODate();
+const maxDate = new Date(today);
+maxDate.setDate(maxDate.getDate() + 7);
+const maxISO = maxDate.toISOString().slice(0, 10);
+
+if (date > maxISO) {
+  return res.status(403).json({ error: "MAX_7_DAYS_AHEAD" });
+}
 
   // ===== APPLICA LIMITI PRENOTAZIONE =====
   if (!isAdmin) {
