@@ -1,4 +1,4 @@
-const CACHE_NAME = "bagni-claudia-pwa-v3";
+const CACHE_NAME = "bagni-claudia-pwa-v4";
 
 
 const ASSETS = [
