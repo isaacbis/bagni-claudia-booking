@@ -32,14 +32,14 @@ app.use(
         "frame-ancestors": ["'self'"],
         "img-src": ["'self'", "data:", "https:"],
         "script-src": ["'self'"],
-        "style-src": ["'self'"],
-        "connect-src": ["'self'"],
+        "style-src": ["'self'", "https://fonts.googleapis.com"],
+        "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
+        "connect-src": ["'self'", "https://api.open-meteo.com"],
         "upgrade-insecure-requests": [],
       },
     },
   })
 );
-
 /* ======================================================
    PARSER
    ====================================================== */

@@ -505,16 +505,21 @@ qs("bookMsg").textContent =
 async function deleteReservation(id) {
   if (!confirm("Cancellare la prenotazione?")) return;
 
-  // UI immediata
-  STATE.reservations = STATE.reservations.filter(r => r.id !== id);
-  renderReservations();
-  renderTimeSelect();
-
   try {
     await api(`/reservations/${id}`, { method: "DELETE" });
+    qs("bookMsg").textContent = "Prenotazione cancellata ✅";
     await refreshCredits();
     await loadReservations();
-  } catch {
+  } catch (e) {
+    qs("bookMsg").textContent =
+      e?.error === "CANNOT_CANCEL_WITHIN_1_HOUR"
+        ? "❌ Non puoi cancellare entro 1 ora dall'inizio"
+        : e?.error === "PAST_RESERVATION_CANNOT_BE_DELETED"
+        ? "❌ Non puoi cancellare una prenotazione già passata o iniziata"
+        : e?.error === "NOT_ALLOWED"
+        ? "❌ Operazione non consentita"
+        : "❌ Errore durante la cancellazione";
+
     await loadReservations();
   }
 }

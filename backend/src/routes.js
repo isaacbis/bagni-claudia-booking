@@ -259,7 +259,34 @@ router.delete("/reservations/:id", requireAuth, async (req, res) => {
     return res.status(403).json({ error: "NOT_ALLOWED" });
   }
 
+  const today = localISODate();
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const reservationStart = timeToMinutes(r.time);
+
+  // slot già passato
+  if (r.date < today || (r.date === today && reservationStart <= nowMins)) {
+    return res.status(403).json({ error: "PAST_RESERVATION_CANNOT_BE_DELETED" });
+  }
+
+  // per utenti normali: no cancellazione entro 1 ora
+  if (!isAdmin && r.date === today) {
+    const diff = reservationStart - nowMins;
+    if (diff <= 60) {
+      return res.status(403).json({ error: "CANNOT_CANCEL_WITHIN_1_HOUR" });
+    }
+  }
+
   await snap.ref.delete();
+
+  // rimborso credito solo per utenti normali e solo per prenotazioni future
+  const isFutureDay = r.date > today;
+  if (!isAdmin && isFutureDay) {
+    await db.collection("users").doc(username).update({
+      credits: FieldValue.increment(1)
+    });
+  }
+
   res.json({ ok: true });
 });
 
@@ -371,15 +398,55 @@ router.put("/admin/users/credits", requireAdmin, async (req, res) => {
 router.post("/admin/users/rename", requireAdmin, async (req, res) => {
   const { oldUsername, newUsername } = req.body;
 
-  const oldRef = db.collection("users").doc(oldUsername);
-  const snap = await oldRef.get();
-  if (!snap.exists) return res.status(404).json({ error: "USER_NOT_FOUND" });
+  if (
+    typeof oldUsername !== "string" ||
+    typeof newUsername !== "string" ||
+    !oldUsername.trim() ||
+    !newUsername.trim()
+  ) {
+    return res.status(400).json({ error: "BAD_BODY" });
+  }
 
-  await db.collection("users").doc(newUsername).set(snap.data());
+  const oldName = oldUsername.trim();
+  const newName = newUsername.trim();
+
+  if (oldName === newName) {
+    return res.status(400).json({ error: "SAME_USERNAME" });
+  }
+
+  const oldRef = db.collection("users").doc(oldName);
+  const newRef = db.collection("users").doc(newName);
+
+  const [oldSnap, newSnap] = await Promise.all([oldRef.get(), newRef.get()]);
+
+  if (!oldSnap.exists) {
+    return res.status(404).json({ error: "USER_NOT_FOUND" });
+  }
+
+  if (newSnap.exists) {
+    return res.status(409).json({ error: "USERNAME_ALREADY_EXISTS" });
+  }
+
+  await newRef.set(oldSnap.data());
   await oldRef.delete();
+
+  // opzionale ma utile: aggiorna prenotazioni già esistenti del vecchio utente
+  const reservationsSnap = await db
+    .collection("reservations")
+    .where("user", "==", oldName)
+    .get();
+
+  if (!reservationsSnap.empty) {
+    const batch = db.batch();
+    reservationsSnap.forEach(doc => {
+      batch.update(doc.ref, { user: newName });
+    });
+    await batch.commit();
+  }
 
   res.json({ ok: true });
 });
+
 router.put("/admin/users/status", requireAdmin, async (req, res) => {
   const { username, disabled } = req.body;
   await db.collection("users").doc(username)
