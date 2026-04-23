@@ -49,8 +49,16 @@ function isPastDate(dateStr) {
 }
 
 function localISODate(d = new Date()) {
-  const tz = d.getTimezoneOffset() * 60000;
-  return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+  const cutoffMinutes = 8 * 60 + 30;
+  const currentMinutes = d.getHours() * 60 + d.getMinutes();
+
+  const effectiveDate = new Date(d);
+  if (currentMinutes < cutoffMinutes) {
+    effectiveDate.setDate(effectiveDate.getDate() - 1);
+  }
+
+  const tz = effectiveDate.getTimezoneOffset() * 60000;
+  return new Date(effectiveDate.getTime() - tz).toISOString().slice(0, 10);
 }
 
 function maxDatePlus(days) {
