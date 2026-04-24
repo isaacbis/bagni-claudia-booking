@@ -439,12 +439,9 @@ function renderTimeSelect() {
       const o = document.createElement("option");
       o.value = t;
 
-      const selectedDate = qs("datePick").value;
-...
-if (isPastTimeToday(selectedDate, t)) {
-  o.textContent = `${t} ⏰ Orario passato`;
-  o.disabled = true;
-}
+      if (isPastTimeToday(selectedDate, t)) {
+        o.textContent = `${t} ⏰ Orario passato`;
+        o.disabled = true;
       } else if (taken.has(t)) {
         o.textContent = `${t} ❌ Occupato`;
         o.disabled = true;
@@ -456,7 +453,6 @@ if (isPastTimeToday(selectedDate, t)) {
     }
   });
 }
-
   
 /* ===== PRENOTA (UI OTTIMISTICA) ===== */
 async function book() {
