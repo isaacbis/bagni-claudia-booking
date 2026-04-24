@@ -422,7 +422,7 @@ function renderTimeSelect() {
   const slot = STATE.config.slotMinutes || 45;
   const ranges = STATE.config.timeRanges || [];
   const field = qs("fieldSelect").value;
-  const isToday = qs("datePick").value === localISODate();
+  const selectedDate = qs("datePick").value;
 
   const taken = new Set(
     STATE.dayReservationsAll
@@ -439,9 +439,12 @@ function renderTimeSelect() {
       const o = document.createElement("option");
       o.value = t;
 
-      if (isToday && m <= nowMinutes()) {
-        o.textContent = `${t} ⏰ Orario passato`;
-        o.disabled = true;
+      const selectedDate = qs("datePick").value;
+...
+if (isPastTimeToday(selectedDate, t)) {
+  o.textContent = `${t} ⏰ Orario passato`;
+  o.disabled = true;
+}
       } else if (taken.has(t)) {
         o.textContent = `${t} ❌ Occupato`;
         o.disabled = true;
