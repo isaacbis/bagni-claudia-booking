@@ -35,21 +35,76 @@ function timeToMinutes(t) {
   return h * 60 + m;
 }
 
+function getRomeNowParts() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(new Date());
+
+  const map = Object.fromEntries(parts.map(p => [p.type, p.value]));
+
+  return {
+    year: Number(map.year),
+    month: Number(map.month),
+    day: Number(map.day),
+    hour: Number(map.hour),
+    minute: Number(map.minute),
+    second: Number(map.second)
+  };
+}
+
+function romeDateTimeFromStrings(dateStr, timeStr) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hour, minute] = timeStr.split(":").map(Number);
+
+  return { year, month, day, hour, minute };
+}
+
+function compareRomeDateTimes(a, b) {
+  const ak = [
+    a.year,
+    String(a.month).padStart(2, "0"),
+    String(a.day).padStart(2, "0"),
+    String(a.hour).padStart(2, "0"),
+    String(a.minute).padStart(2, "0")
+  ].join("");
+
+  const bk = [
+    b.year,
+    String(b.month).padStart(2, "0"),
+    String(b.day).padStart(2, "0"),
+    String(b.hour).padStart(2, "0"),
+    String(b.minute).padStart(2, "0")
+  ].join("");
+
+  return ak.localeCompare(bk);
+}
+
 function localISODate() {
-  const d = new Date();
+  const now = getRomeNowParts();
 
-  // cambio giorno alle 08:30
   const cutoffMinutes = 8 * 60 + 30;
-  const currentMinutes = d.getHours() * 60 + d.getMinutes();
+  const currentMinutes = now.hour * 60 + now.minute;
 
-  const effectiveDate = new Date(d);
+  const d = new Date(Date.UTC(now.year, now.month - 1, now.day));
+
   if (currentMinutes < cutoffMinutes) {
-    effectiveDate.setDate(effectiveDate.getDate() - 1);
+    d.setUTCDate(d.getUTCDate() - 1);
   }
 
-  const tz = effectiveDate.getTimezoneOffset() * 60000;
-  return new Date(effectiveDate.getTime() - tz).toISOString().slice(0, 10);
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
+
 async function cleanupExpiredReservations() {
   const now = Date.now();
   if (now - lastCleanup < CLEANUP_COOLDOWN_MS) return;
@@ -60,7 +115,9 @@ async function cleanupExpiredReservations() {
   const slotMinutes = Number(cfg.slotMinutes || 45);
 
   const today = localISODate();
-  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+  const romeNow = getRomeNowParts();
+const nowMinutes = romeNow.hour * 60 + romeNow.minute;
+
 
   const snap = await db
     .collection("reservations")
@@ -192,14 +249,12 @@ router.post("/reservations", requireAuth, async (req, res) => {
 const { fieldId, date, time } = parsed.data;
 const username = req.session.user.username;
 const isAdmin = req.session.user.role === "admin";
-const [year, month, day] = date.split("-").map(Number);
-const [hour, minute] = time.split(":").map(Number);
-const reservationDateTime = new Date(year, month - 1, day, hour, minute, 0, 0);
+const reservationDateTime = romeDateTimeFromStrings(date, time);
+const romeNow = getRomeNowParts();
 
-if (reservationDateTime.getTime() <= Date.now()) {
+if (compareRomeDateTimes(reservationDateTime, romeNow) <= 0) {
   return res.status(403).json({ error: "PAST_TIME" });
 }
-
 
 // ===== LIMITE PRENOTAZIONE: MAX 7 GIORNI AVANTI =====
 const today = localISODate();
@@ -277,16 +332,15 @@ router.delete("/reservations/:id", requireAuth, async (req, res) => {
   }
 
   const today = localISODate();
-  const now = new Date();
-  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const romeNowForCancel = getRomeNowParts();
+const nowMins = romeNowForCancel.hour * 60 + romeNowForCancel.minute;
   const reservationStart = timeToMinutes(r.time);
 
   // slot già passato
-  const [year, month, day] = r.date.split("-").map(Number);
-const [hour, minute] = r.time.split(":").map(Number);
-const reservationDateTime = new Date(year, month - 1, day, hour, minute, 0, 0);
+  const reservationDateTime = romeDateTimeFromStrings(r.date, r.time);
+const romeNow = getRomeNowParts();
 
-if (reservationDateTime.getTime() <= Date.now()) {
+if (compareRomeDateTimes(reservationDateTime, romeNow) <= 0) {
   return res.status(403).json({ error: "PAST_RESERVATION_CANNOT_BE_DELETED" });
 }
 
