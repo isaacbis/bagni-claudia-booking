@@ -62,12 +62,14 @@ function localISODate(d = new Date()) {
 }
 
 function maxDatePlus(days) {
-  const d = new Date();
+  const baseISO = localISODate();
+  const d = new Date(baseISO + "T12:00:00");
+
   d.setDate(d.getDate() + days);
+
   const tz = d.getTimezoneOffset() * 60000;
   return new Date(d.getTime() - tz).toISOString().slice(0, 10);
 }
-
 
 function nowMinutes() {
   const d = new Date();
