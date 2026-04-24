@@ -192,9 +192,11 @@ router.post("/reservations", requireAuth, async (req, res) => {
 const { fieldId, date, time } = parsed.data;
 const username = req.session.user.username;
 const isAdmin = req.session.user.role === "admin";
-const reservationDateTime = new Date(`${date}T${time}:00`);
+const [year, month, day] = date.split("-").map(Number);
+const [hour, minute] = time.split(":").map(Number);
+const reservationDateTime = new Date(year, month - 1, day, hour, minute, 0, 0);
 
-if (reservationDateTime <= new Date()) {
+if (reservationDateTime.getTime() <= Date.now()) {
   return res.status(403).json({ error: "PAST_TIME" });
 }
 
@@ -280,11 +282,14 @@ router.delete("/reservations/:id", requireAuth, async (req, res) => {
   const reservationStart = timeToMinutes(r.time);
 
   // slot già passato
-  const reservationDateTime = new Date(`${r.date}T${r.time}:00`);
+  const [year, month, day] = r.date.split("-").map(Number);
+const [hour, minute] = r.time.split(":").map(Number);
+const reservationDateTime = new Date(year, month - 1, day, hour, minute, 0, 0);
 
-if (reservationDateTime <= new Date()) {
+if (reservationDateTime.getTime() <= Date.now()) {
   return res.status(403).json({ error: "PAST_RESERVATION_CANNOT_BE_DELETED" });
 }
+
 
 
   // per utenti normali: no cancellazione entro 1 ora

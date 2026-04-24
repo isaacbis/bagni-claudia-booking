@@ -77,10 +77,13 @@ function nowMinutes() {
 }
 
 function isPastTimeToday(dateStr, timeStr) {
-  const reservationDateTime = new Date(`${dateStr}T${timeStr}:00`);
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hour, minute] = timeStr.split(":").map(Number);
+
+  const reservationDateTime = new Date(year, month - 1, day, hour, minute, 0, 0);
   const now = new Date();
 
-  return reservationDateTime <= now;
+  return reservationDateTime.getTime() <= now.getTime();
 }
 
 function minutes(t) {
