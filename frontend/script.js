@@ -77,9 +77,12 @@ function nowMinutes() {
 }
 
 function isPastTimeToday(dateStr, timeStr) {
-  if (dateStr !== localISODate()) return false;
-  return minutes(timeStr) <= nowMinutes();
+  const reservationDateTime = new Date(`${dateStr}T${timeStr}:00`);
+  const now = new Date();
+
+  return reservationDateTime <= now;
 }
+
 function minutes(t) {
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
@@ -502,7 +505,10 @@ qs("bookMsg").textContent =
     ? "Hai raggiunto il limite di prenotazioni attive"
     : e?.error === "MAX_PER_DAY_LIMIT"
     ? "Hai raggiunto il limite di prenotazioni per questo giorno"
-    : "Errore prenotazione";
+    : e?.error === "PAST_TIME"
+? "❌ Non puoi prenotare un orario passato"
+: "Errore prenotazione";
+
 
   await loadReservations();
 }

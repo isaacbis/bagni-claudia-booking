@@ -192,6 +192,12 @@ router.post("/reservations", requireAuth, async (req, res) => {
 const { fieldId, date, time } = parsed.data;
 const username = req.session.user.username;
 const isAdmin = req.session.user.role === "admin";
+const reservationDateTime = new Date(`${date}T${time}:00`);
+
+if (reservationDateTime <= new Date()) {
+  return res.status(403).json({ error: "PAST_TIME" });
+}
+
 
 // ===== LIMITE PRENOTAZIONE: MAX 7 GIORNI AVANTI =====
 const today = localISODate();
@@ -274,9 +280,12 @@ router.delete("/reservations/:id", requireAuth, async (req, res) => {
   const reservationStart = timeToMinutes(r.time);
 
   // slot già passato
-  if (r.date < today || (r.date === today && reservationStart <= nowMins)) {
-    return res.status(403).json({ error: "PAST_RESERVATION_CANNOT_BE_DELETED" });
-  }
+  const reservationDateTime = new Date(`${r.date}T${r.time}:00`);
+
+if (reservationDateTime <= new Date()) {
+  return res.status(403).json({ error: "PAST_RESERVATION_CANNOT_BE_DELETED" });
+}
+
 
   // per utenti normali: no cancellazione entro 1 ora
   if (!isAdmin && r.date === today) {
