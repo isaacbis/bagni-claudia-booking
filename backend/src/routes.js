@@ -105,6 +105,17 @@ function localISODate() {
   return `${year}-${month}-${day}`;
 }
 
+function realRomeISODate() {
+  const now = getRomeNowParts();
+  return `${now.year}-${String(now.month).padStart(2, "0")}-${String(now.day).padStart(2, "0")}`;
+}
+
+function isBeforeRomeCutoff() {
+  const now = getRomeNowParts();
+  return (now.hour * 60 + now.minute) < (8 * 60 + 30);
+}
+
+
 async function cleanupExpiredReservations() {
   const now = Date.now();
   if (now - lastCleanup < CLEANUP_COOLDOWN_MS) return;
@@ -249,6 +260,10 @@ router.post("/reservations", requireAuth, async (req, res) => {
 const { fieldId, date, time } = parsed.data;
 const username = req.session.user.username;
 const isAdmin = req.session.user.role === "admin";
+if (isBeforeRomeCutoff() && date === realRomeISODate()) {
+  return res.status(403).json({ error: "CURRENT_DAY_LOCKED_UNTIL_0830" });
+}
+
 const reservationDateTime = romeDateTimeFromStrings(date, time);
 const romeNow = getRomeNowParts();
 

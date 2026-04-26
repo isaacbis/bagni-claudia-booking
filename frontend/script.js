@@ -61,6 +61,21 @@ function localISODate(d = new Date()) {
   return new Date(effectiveDate.getTime() - tz).toISOString().slice(0, 10);
 }
 
+function realISODate() {
+  const d = new Date();
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+}
+
+function isBeforeCutoff() {
+  const d = new Date();
+  return (d.getHours() * 60 + d.getMinutes()) < (8 * 60 + 30);
+}
+
+function isCurrentRealDayBlocked(dateStr) {
+  return isBeforeCutoff() && dateStr === realISODate();
+}
+
 function maxDatePlus(days) {
   const baseISO = localISODate();
   const d = new Date(baseISO + "T12:00:00");
@@ -318,6 +333,19 @@ hide(qs("skeleton"));
 /* ================= RESERVATIONS ================= */
 async function loadReservations() {
   const date = qs("datePick").value;
+if (isCurrentRealDayBlocked(date)) {
+  qs("bookBtn").disabled = true;
+  qs("bookMsg").textContent =
+    "❌ La giornata di oggi si può prenotare solo dalle 08:30";
+
+  STATE.dayReservationsAll = [];
+  STATE.reservations = [];
+
+  renderTimeSelect();
+  renderReservations();
+  renderFieldInfo();
+  return;
+}
 
   // ❌ BLOCCO GIORNI PASSATI
   if (isPastDate(date)) {
@@ -463,6 +491,12 @@ async function book() {
   const date = qs("datePick").value;
   const time = qs("timeSelect").value;
 
+if (isCurrentRealDayBlocked(date)) {
+  qs("bookMsg").textContent =
+    "❌ La giornata di oggi si può prenotare solo dalle 08:30";
+  return;
+}
+
   // ❌ BLOCCO GIORNI PASSATI
   if (isPastDate(date)) {
   qs("bookMsg").textContent = "❌ Non puoi prenotare un giorno passato";
@@ -507,9 +541,11 @@ qs("bookMsg").textContent =
     ? "Hai raggiunto il limite di prenotazioni attive"
     : e?.error === "MAX_PER_DAY_LIMIT"
     ? "Hai raggiunto il limite di prenotazioni per questo giorno"
+    : e?.error === "CURRENT_DAY_LOCKED_UNTIL_0830"
+    ? "❌ La giornata di oggi si può prenotare solo dalle 08:30"
     : e?.error === "PAST_TIME"
-? "❌ Non puoi prenotare un orario passato"
-: "Errore prenotazione";
+    ? "❌ Non puoi prenotare un orario passato"
+    : "Errore prenotazione";
 
 
   await loadReservations();
