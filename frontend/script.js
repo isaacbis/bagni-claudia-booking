@@ -448,7 +448,17 @@ function renderTimeline(fieldId) {
 
 function renderTimeSelect() {
   const sel = qs("timeSelect");
+
+  const previousValue = sel.value;
+
   sel.innerHTML = "";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Seleziona un orario";
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  sel.appendChild(placeholder);
 
   const slot = STATE.config.slotMinutes || 45;
   const ranges = STATE.config.timeRanges || [];
@@ -460,6 +470,8 @@ function renderTimeSelect() {
       .filter(r => r.fieldId === field)
       .map(r => r.time)
   );
+
+  let previousStillAvailable = false;
 
   ranges.forEach(range => {
     let start = minutes(range.start);
@@ -478,50 +490,71 @@ function renderTimeSelect() {
         o.disabled = true;
       } else {
         o.textContent = `${t} ✅ Libero`;
+
+        if (previousValue && t === previousValue) {
+          previousStillAvailable = true;
+        }
       }
 
       sel.appendChild(o);
     }
   });
+
+  if (previousStillAvailable) {
+    sel.value = previousValue;
+  } else {
+    sel.value = "";
+  }
 }
-  
-/* ===== PRENOTA (UI OTTIMISTICA) ===== */
+
 async function book() {
   const fieldId = qs("fieldSelect").value;
   const date = qs("datePick").value;
   const time = qs("timeSelect").value;
 
-if (isCurrentRealDayBlocked(date)) {
-  qs("bookMsg").textContent =
-    "❌ La giornata di oggi si può prenotare solo dalle 08:30";
-  return;
-}
+  if (!time) {
+    qs("bookMsg").textContent = "❌ Seleziona un orario prima di prenotare";
+    return;
+  }
 
-  // ❌ BLOCCO GIORNI PASSATI
+  if (isCurrentRealDayBlocked(date)) {
+    qs("bookMsg").textContent =
+      "❌ La giornata di oggi si può prenotare solo dalle 08:30";
+    return;
+  }
+
   if (isPastDate(date)) {
-  qs("bookMsg").textContent = "❌ Non puoi prenotare un giorno passato";
-  return;
-}
+    qs("bookMsg").textContent = "❌ Non puoi prenotare un giorno passato";
+    return;
+  }
 
-if (isPastTimeToday(date, time)) {
-  qs("bookMsg").textContent = "❌ Orario già passato";
-  return;
-}
+  if (isPastTimeToday(date, time)) {
+    qs("bookMsg").textContent = "❌ Orario già passato";
+    return;
+  }
 
+  const slotAlreadyTaken = STATE.dayReservationsAll.some(
+    r => r.fieldId === fieldId && r.date === date && r.time === time
+  );
+
+  if (slotAlreadyTaken) {
+    qs("bookMsg").textContent =
+      "❌ Questo orario è appena stato occupato. Scegli un altro orario.";
+    await loadReservations();
+    return;
+  }
+
+  const selectedField = STATE.fields.find(f => f.id === fieldId);
+  const fieldName = selectedField ? selectedField.name : fieldId;
+
+  const ok = confirm(
+    `Confermi la prenotazione?\n\nCampo: ${fieldName}\nData: ${date}\nOrario: ${time}`
+  );
+
+  if (!ok) return;
 
   qs("bookBtn").disabled = true;
   qs("bookBtn").textContent = "Salvataggio…";
-
-  // UI immediata
-  STATE.reservations.push({
-    id: "tmp_" + Date.now(),
-    fieldId,
-    date,
-    time,
-    user: STATE.me.username
-  });
-  renderReservations();
-  renderTimeSelect();
 
   try {
     await api("/reservations", {
@@ -534,23 +567,23 @@ if (isPastTimeToday(date, time)) {
     await loadReservations();
 
   } catch (e) {
-qs("bookMsg").textContent =
-  e?.error === "MAX_7_DAYS_AHEAD"
-    ? "❌ Prenotazioni consentite solo entro 7 giorni"
-    : e?.error === "ACTIVE_BOOKING_LIMIT"
-    ? "Hai raggiunto il limite di prenotazioni attive"
-    : e?.error === "MAX_PER_DAY_LIMIT"
-    ? "Hai raggiunto il limite di prenotazioni per questo giorno"
-    : e?.error === "CURRENT_DAY_LOCKED_UNTIL_0830"
-    ? "❌ La giornata di oggi si può prenotare solo dalle 08:30"
-    : e?.error === "PAST_TIME"
-    ? "❌ Non puoi prenotare un orario passato"
-    : "Errore prenotazione";
+    qs("bookMsg").textContent =
+      e?.error === "MAX_7_DAYS_AHEAD"
+        ? "❌ Prenotazioni consentite solo entro 7 giorni"
+        : e?.error === "ACTIVE_BOOKING_LIMIT"
+        ? "Hai raggiunto il limite di prenotazioni attive"
+        : e?.error === "MAX_PER_DAY_LIMIT"
+        ? "Hai raggiunto il limite di prenotazioni per questo giorno"
+        : e?.error === "CURRENT_DAY_LOCKED_UNTIL_0830"
+        ? "❌ La giornata di oggi si può prenotare solo dalle 08:30"
+        : e?.error === "PAST_TIME"
+        ? "❌ Non puoi prenotare un orario passato"
+        : e?.error === "SLOT_TAKEN"
+        ? "❌ Questo orario è già stato prenotato"
+        : "Errore prenotazione";
 
-
-  await loadReservations();
-}
-
+    await loadReservations();
+  }
 
   qs("bookBtn").disabled = false;
   qs("bookBtn").textContent = "Prenota";

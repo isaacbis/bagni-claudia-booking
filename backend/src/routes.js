@@ -348,21 +348,39 @@ router.delete("/reservations/:id", requireAuth, async (req, res) => {
 
   const today = localISODate();
   const romeNowForCancel = getRomeNowParts();
-const nowMins = romeNowForCancel.hour * 60 + romeNowForCancel.minute;
+  const nowMins = romeNowForCancel.hour * 60 + romeNowForCancel.minute;
   const reservationStart = timeToMinutes(r.time);
 
   // slot già passato
   const reservationDateTime = romeDateTimeFromStrings(r.date, r.time);
-const romeNow = getRomeNowParts();
+  const romeNow = getRomeNowParts();
 
-if (compareRomeDateTimes(reservationDateTime, romeNow) <= 0) {
-  return res.status(403).json({ error: "PAST_RESERVATION_CANNOT_BE_DELETED" });
-}
+  if (compareRomeDateTimes(reservationDateTime, romeNow) <= 0) {
+    return res.status(403).json({ error: "PAST_RESERVATION_CANNOT_BE_DELETED" });
+  }
 
+  // Finestra di sicurezza:
+  // l'utente può cancellare entro 5 minuti da quando ha prenotato,
+  // anche se manca meno di 1 ora all'inizio.
+  const CANCEL_GRACE_MINUTES = 5;
 
+  let createdAtMs = 0;
 
-  // per utenti normali: no cancellazione entro 1 ora
-  if (!isAdmin && r.date === today) {
+  if (r.createdAt?.toDate) {
+    createdAtMs = r.createdAt.toDate().getTime();
+  } else if (r.createdAt?._seconds) {
+    createdAtMs = r.createdAt._seconds * 1000;
+  }
+
+  const minutesSinceCreation = createdAtMs
+    ? (Date.now() - createdAtMs) / 60000
+    : Infinity;
+
+  const isInsideGracePeriod = minutesSinceCreation <= CANCEL_GRACE_MINUTES;
+
+  // per utenti normali: no cancellazione entro 1 ora,
+  // tranne entro 5 minuti dalla creazione della prenotazione
+  if (!isAdmin && r.date === today && !isInsideGracePeriod) {
     const diff = reservationStart - nowMins;
     if (diff <= 60) {
       return res.status(403).json({ error: "CANNOT_CANCEL_WITHIN_1_HOUR" });
@@ -371,10 +389,11 @@ if (compareRomeDateTimes(reservationDateTime, romeNow) <= 0) {
 
   await snap.ref.delete();
 
-  // rimborso credito solo per utenti normali e solo per prenotazioni future
-  const isFutureDay = r.date > today;
-  if (!isAdmin && isFutureDay) {
-    await db.collection("users").doc(username).update({
+  // Rimborso credito:
+  // - se cancella un utente normale, rimborso a lui
+  // - se cancella admin una prenotazione di un utente, rimborso all'utente della prenotazione
+  if (r.user) {
+    await db.collection("users").doc(r.user).update({
       credits: FieldValue.increment(1)
     });
   }
