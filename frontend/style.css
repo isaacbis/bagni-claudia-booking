@@ -908,3 +908,267 @@ button:active{
     transition:none !important;
   }
 }
+
+/* ===== Mobile-first refinements ===== */
+html{
+  min-height:100%;
+  -webkit-text-size-adjust:100%;
+  touch-action:manipulation;
+}
+
+body{
+  min-height:100dvh;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+
+.topbar{
+  padding-top:max(12px, env(safe-area-inset-top));
+  padding-left:max(14px, env(safe-area-inset-left));
+  padding-right:max(14px, env(safe-area-inset-right));
+}
+
+.wrap{
+  padding-left:max(12px, env(safe-area-inset-left));
+  padding-right:max(12px, env(safe-area-inset-right));
+  padding-bottom:max(24px, env(safe-area-inset-bottom));
+}
+
+.app-logo{
+  display:block;
+  width:112px;
+  height:112px;
+  margin:0 auto 14px;
+  border-radius:24px;
+  object-fit:cover;
+  box-shadow:0 16px 36px rgba(0,0,0,.34);
+}
+
+input,
+select,
+textarea,
+button{
+  min-height:48px;
+}
+
+select,
+input[type="date"],
+input[type="time"]{
+  font-size:16px;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible{
+  outline:2px solid var(--sand);
+  outline-offset:2px;
+}
+
+.timeline{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(68px, 1fr));
+  gap:8px;
+  overflow:visible;
+}
+
+.slot{
+  width:100%;
+  max-width:none;
+  min-width:0;
+  min-height:48px;
+  padding:8px 4px;
+  border:1px solid transparent;
+}
+
+.slot-time{
+  font-size:12px;
+  font-weight:800;
+}
+
+.slot.free{
+  color:var(--text);
+  cursor:pointer;
+}
+
+.slot.past{
+  background:rgba(255,255,255,.05);
+  color:var(--muted-2);
+  opacity:.55;
+}
+
+.slot.selected{
+  border-color:var(--sand);
+  box-shadow:0 0 0 3px rgba(255,179,71,.20), 0 10px 24px rgba(0,0,0,.24);
+}
+
+.slot:disabled{
+  cursor:not-allowed;
+}
+
+.user-summary{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:0;
+}
+
+#setCreditsAllBtn{
+  margin-bottom:12px;
+}
+
+@media (max-width:600px){
+  .brand{
+    max-width:calc(100vw - 120px);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:16px;
+  }
+
+  .topbar{
+    min-height:64px;
+  }
+
+  .topbar .btn-ghost{
+    width:auto;
+    min-height:44px;
+    padding:10px 13px;
+  }
+
+  .wrap{
+    padding-top:10px;
+  }
+
+  .card{
+    margin-bottom:12px;
+    padding:15px;
+    border-radius:18px;
+  }
+
+  .login-card{
+    margin-top:4px;
+  }
+
+  .login-title{
+    font-size:clamp(25px, 8vw, 34px);
+    letter-spacing:.10em;
+  }
+
+  .login-subtitle{
+    font-size:10px;
+    letter-spacing:.20em;
+    margin-bottom:18px;
+  }
+
+  .login-gallery{
+    max-width:100%;
+    gap:8px;
+    overflow-x:auto;
+    justify-content:flex-start;
+    padding:8px 4px 14px;
+    scrollbar-width:none;
+  }
+
+  .login-gallery::-webkit-scrollbar{
+    display:none;
+  }
+
+  .login-gallery-item{
+    flex:0 0 58px;
+  }
+
+  .grid3{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:0;
+  }
+
+  #bookBtn{
+    position:sticky;
+    bottom:max(10px, env(safe-area-inset-bottom));
+    z-index:15;
+  }
+
+  .timeline{
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+  }
+
+  .slot{
+    width:100%;
+    max-width:none;
+    min-height:48px;
+    flex:none;
+  }
+
+  .slot-time{
+    font-size:12px;
+  }
+
+  .now-marker{
+    display:none;
+  }
+
+  .item{
+    align-items:stretch;
+    flex-wrap:wrap;
+  }
+
+  .item button{
+    min-height:44px;
+  }
+
+  #adminUsers .item{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    align-items:stretch;
+  }
+
+  #adminUsers .user-summary,
+  #adminUsers .rename-input{
+    grid-column:1 / -1;
+    max-width:none;
+  }
+
+  #adminUsers .item button{
+    width:100%;
+    margin:0;
+  }
+
+  #adminUsers .item button + button{
+    margin-top:0;
+  }
+
+  .users-scroll{
+    max-height:none;
+    overflow:visible;
+    padding:0;
+    border:0;
+    background:transparent;
+  }
+
+  .weather-row{
+    overflow-x:auto;
+    justify-content:flex-start;
+    padding-bottom:4px;
+    scrollbar-width:none;
+  }
+
+  .weather-day{
+    flex:0 0 58px;
+  }
+}
+
+@media (max-width:360px){
+  .timeline{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+  }
+
+  #adminUsers .item{
+    grid-template-columns:1fr;
+  }
+
+  #adminUsers .user-summary,
+  #adminUsers .rename-input{
+    grid-column:1;
+  }
+}

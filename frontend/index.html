@@ -7,8 +7,11 @@
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" as="style">
 <link rel="preload" as="image" href="/icon-192.png">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Bagni Claudia – Prenotazione Campi</title>
+  <meta name="description" content="Prenota i campi di Bagni Claudia dal tuo telefono.">
+  <meta name="theme-color" content="#070a10">
+  <meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -16,7 +19,8 @@
 
   <link rel="stylesheet" href="/style.css">
   <link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/icon-192-v3.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Bagni Claudia">
@@ -33,14 +37,15 @@
 <!-- LOGIN -->
 <section id="loginBox" class="card login-card">
 <div id="loginGallery" class="login-gallery"></div>
+  <img class="app-logo" src="/icon-192.png" alt="Bagni Claudia" width="112" height="112">
   <h1 class="login-title">
   Bagni <span class="brand-claudia">Claudia</span>
 </h1>
   <p class="login-subtitle">Prenotazione Campi</p>
 
-  <input id="username" placeholder="Username">
-  <input id="password" type="password" placeholder="Password">
-  <button id="loginBtn" class="btn">Accedi</button>
+  <input id="username" name="username" type="text" placeholder="Username" aria-label="Username" autocomplete="username" autocapitalize="none" spellcheck="false">
+  <input id="password" name="password" type="password" placeholder="Password" aria-label="Password" autocomplete="current-password">
+  <button id="loginBtn" class="btn" type="button">Accedi</button>
   <div id="loginErr" class="error hidden"></div>
 
 </section>
@@ -82,9 +87,9 @@
   <section class="card">
     <h3>Prenota</h3>
     <div class="grid3">
-      <input id="datePick" type="date">
-      <select id="fieldSelect"></select>
-      <select id="timeSelect"></select>
+      <input id="datePick" type="date" aria-label="Data della prenotazione">
+      <select id="fieldSelect" aria-label="Campo"></select>
+      <select id="timeSelect" aria-label="Orario"></select>
     </div>
     <button id="bookBtn" class="btn">Prenota</button>
     <div id="bookMsg" class="muted"></div>
@@ -154,7 +159,6 @@ Login</button>
   <button
   id="setCreditsAllBtn"
   class="btn"
-  style="margin-bottom:12px"
 >
   🔁 Imposta tutti a 70 crediti
 </button>
@@ -188,5 +192,6 @@ Login</button>
 </main>
 
 <script src="/script.js" defer></script>
+<noscript>Per usare la prenotazione campi devi attivare JavaScript.</noscript>
 </body>
 </html>

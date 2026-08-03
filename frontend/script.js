@@ -19,10 +19,14 @@ let STATE = {
 };
 
 let AUTO_REFRESH_TIMER = null;
+let REFRESH_IN_PROGRESS = false;
+let RESERVATIONS_REQUEST_ID = 0;
 
 function startAutoRefresh() {
   stopAutoRefresh();
   AUTO_REFRESH_TIMER = setInterval(async () => {
+    if (REFRESH_IN_PROGRESS || document.hidden || !STATE.me) return;
+    REFRESH_IN_PROGRESS = true;
     try {
       // aggiorna prenotazioni (e quindi timeline, stato, ecc.)
       await loadReservations();
@@ -34,8 +38,10 @@ function startAutoRefresh() {
     } catch (e) {
       // se la sessione è scaduta o il server dorme, non blocchiamo la UI
       console.warn("Auto-refresh fallito", e);
+    } finally {
+      REFRESH_IN_PROGRESS = false;
     }
-  }, 5_000);
+  }, 10_000);
 }
 
 function stopAutoRefresh() {
@@ -49,22 +55,18 @@ function isPastDate(dateStr) {
 }
 
 function localISODate(d = new Date()) {
-  const cutoffMinutes = 8 * 60 + 30;
-  const currentMinutes = d.getHours() * 60 + d.getMinutes();
-
-  const effectiveDate = new Date(d);
-  if (currentMinutes < cutoffMinutes) {
-    effectiveDate.setDate(effectiveDate.getDate() - 1);
-  }
-
-  const tz = effectiveDate.getTimezoneOffset() * 60000;
-  return new Date(effectiveDate.getTime() - tz).toISOString().slice(0, 10);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(d);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
 }
 
 function realISODate() {
-  const d = new Date();
-  const tz = d.getTimezoneOffset() * 60000;
-  return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+  return localISODate();
 }
 
 function isBeforeCutoff() {
@@ -124,6 +126,10 @@ function weatherEmoji(code) {
 
 // ===== STATO CAMPO =====
 function getFieldStatus(fieldId) {
+  if (qs("datePick")?.value !== localISODate()) {
+    const hasReservations = STATE.dayReservationsAll.some(r => r.fieldId === fieldId);
+    return { status: hasReservations ? "busy" : "free" };
+  }
   const now = nowMinutes();
   const slot = STATE.config.slotMinutes || 45;
 
@@ -143,6 +149,7 @@ function getFieldStatus(fieldId) {
 
 // ===== COUNTDOWN PROSSIMA PARTITA =====
 function getNextMatchCountdown(fieldId) {
+  if (qs("datePick")?.value !== localISODate()) return null;
   const now = nowMinutes();
 
   const next = STATE.dayReservationsAll
@@ -163,6 +170,15 @@ async function api(path, options = {}) {
     ...options
   });
   const j = await r.json().catch(() => ({}));
+  if (r.status === 401 && STATE.me) {
+    STATE.me = null;
+    stopAutoRefresh();
+    hide(qs("app"));
+    hide(qs("logoutBtn"));
+    show(qs("loginBox"));
+    qs("loginErr").textContent = "Sessione scaduta. Accedi di nuovo.";
+    show(qs("loginErr"));
+  }
   if (!r.ok) throw j;
   return j;
 }
@@ -333,6 +349,7 @@ hide(qs("skeleton"));
 /* ================= RESERVATIONS ================= */
 async function loadReservations() {
   const date = qs("datePick").value;
+  const requestId = ++RESERVATIONS_REQUEST_ID;
 if (isCurrentRealDayBlocked(date)) {
   qs("bookBtn").disabled = true;
   qs("bookMsg").textContent =
@@ -373,7 +390,9 @@ qs("bookBtn").disabled = false;
 qs("bookMsg").textContent = "";
 
 
-  const res = await api(`/reservations?date=${date}`);
+  const res = await api(`/reservations?date=${encodeURIComponent(date)}`);
+
+  if (requestId !== RESERVATIONS_REQUEST_ID || date !== qs("datePick").value) return;
 
   STATE.dayReservationsAll = res.items || [];
   STATE.reservations =
@@ -431,14 +450,30 @@ function renderTimeline(fieldId) {
 
     for (let m = start; m + slotMinutes <= end; m += slotMinutes) {
       const t = timeStr(m);
-      const el = document.createElement("div");
+      const el = document.createElement("button");
+      el.type = "button";
 
       const isBusy = STATE.dayReservationsAll.some(
         r => r.fieldId === fieldId && r.time === t
       );
 
-      el.className = "slot " + (isBusy ? "busy" : "free");
-      el.innerHTML = `<div class="slot-time">${t}</div>`;
+      const isPast = isPastTimeToday(qs("datePick").value, t);
+      el.className = "slot " + (isBusy ? "busy" : isPast ? "past" : "free");
+      el.disabled = isBusy || isPast;
+      el.setAttribute("aria-label", `${t}, ${isBusy ? "occupato" : isPast ? "passato" : "libero"}`);
+      const label = document.createElement("span");
+      label.className = "slot-time";
+      label.textContent = t;
+      el.appendChild(label);
+
+      if (!isBusy && !isPast) {
+        el.onclick = () => {
+          qs("timeSelect").value = t;
+          document.querySelectorAll(".slot.selected").forEach(slot => slot.classList.remove("selected"));
+          el.classList.add("selected");
+          qs("bookBtn").scrollIntoView({ behavior: "smooth", block: "center" });
+        };
+      }
 
       box.appendChild(el);
       slots.push(el);
@@ -505,6 +540,8 @@ function renderTimeSelect() {
   } else {
     sel.value = "";
   }
+
+  document.querySelectorAll(".slot.selected").forEach(slot => slot.classList.remove("selected"));
 }
 
 async function book() {
@@ -580,6 +617,12 @@ async function book() {
         ? "❌ Non puoi prenotare un orario passato"
         : e?.error === "SLOT_TAKEN"
         ? "❌ Questo orario è già stato prenotato"
+        : e?.error === "NO_CREDITS"
+        ? "❌ Non hai crediti sufficienti"
+        : e?.error === "INVALID_FIELD" || e?.error === "INVALID_TIME"
+        ? "❌ Campo o orario non valido. Aggiorna la pagina."
+        : e?.error === "PAST_DATE"
+        ? "❌ Non puoi prenotare un giorno passato"
         : "Errore prenotazione";
 
     await loadReservations();
@@ -766,15 +809,20 @@ function renderUsers(filter = "") {
       const d = document.createElement("div");
       d.className = "item";
 
-      d.innerHTML = `
-  <strong>${u.username}</strong> – crediti ${u.credits}
-  <br>
-  <input
-    type="text"
-    placeholder="Nuovo username"
-    class="rename-input"
-  >
-`;
+      const summary = document.createElement("div");
+      summary.className = "user-summary";
+      const name = document.createElement("strong");
+      name.textContent = u.username;
+      const creditsText = document.createElement("span");
+      creditsText.textContent = `Crediti: ${Math.max(0, Number(u.credits) || 0)}`;
+      summary.append(name, creditsText);
+
+      const renameInput = document.createElement("input");
+      renameInput.type = "text";
+      renameInput.placeholder = "Nuovo username";
+      renameInput.className = "rename-input";
+      renameInput.autocomplete = "off";
+      d.append(summary, renameInput);
 
 
       // ✏️ CREDITI
@@ -784,14 +832,19 @@ function renderUsers(filter = "") {
       edit.onclick = async () => {
         const v = prompt("Nuovi crediti", u.credits);
         if (v === null) return;
+        const credits = Number(v);
+        if (!Number.isInteger(credits) || credits < 0) {
+          alert("Inserisci un numero intero uguale o maggiore di zero");
+          return;
+        }
         await api("/admin/users/credits", {
           method: "PUT",
           body: JSON.stringify({
             username: u.username,
-            delta: v - u.credits
+            credits
           })
         });
-        loadUsers();
+        await loadUsers();
       };
 
       // ✏️ RINOMINA
@@ -826,8 +879,9 @@ function renderUsers(filter = "") {
       reset.className = "btn-ghost";
       reset.textContent = "🔑 Reset PW";
       reset.onclick = async () => {
-        const newPw = prompt("Nuova password");
+        const newPw = prompt("Nuova password (almeno 8 caratteri)");
 if (!newPw) return;
+if (newPw.length < 8) return alert("La password deve avere almeno 8 caratteri");
 
 await api("/admin/users/password", {
   method: "PUT",
@@ -998,6 +1052,21 @@ const appLoader = qs("appLoader");
   qs("loginBtn").onclick = login;
   qs("logoutBtn").onclick = logout;
   qs("bookBtn").onclick = book;
+  qs("password").addEventListener("keydown", event => {
+    if (event.key === "Enter") login();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && STATE.me) loadReservations().catch(() => {});
+  });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/service-worker.js").catch(error => {
+        console.warn("Service worker non disponibile", error);
+      });
+    });
+  }
 
   qs("datePick").onchange = loadReservations;
   qs("fieldSelect").onchange = () => {
