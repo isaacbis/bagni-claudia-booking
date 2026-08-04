@@ -1085,3 +1085,31 @@ button:disabled {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* FIX DATA PRENOTAZIONE SU CELLULARE */
+@media (max-width: 767px) {
+  .grid3 {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .grid3 > * {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    justify-self: stretch;
+  }
+
+  #datePick {
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  #datePick:focus {
+    transform: none;
+  }
+}
