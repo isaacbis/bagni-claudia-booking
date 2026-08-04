@@ -1,8 +1,8 @@
-const CACHE_NAME = "bagni-claudia-pwa-v8";
+const CACHE_NAME = "bagni-claudia-pwa-v10";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
-  "/style.css",
+  "/style.css?v=10",
   "/script.js",
   "/manifest.json",
   "/icon-192.png",
