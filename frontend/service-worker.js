@@ -1,58 +1,40 @@
-const CACHE_NAME = "bagni-claudia-pwa-v10";
-const STATIC_ASSETS = [
+const CACHE_NAME = "bagni-claudia-pwa-v6";
+
+
+const ASSETS = [
   "/",
   "/index.html",
-  "/style.css?v=10",
+  "/style.css",
   "/script.js",
-  "/manifest.json",
-  "/icon-192.png",
-  "/icon-512.png"
+  "/icon-192-v3.png",
+  "/icon-512-v3.png"
 ];
 
+// Install
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS)));
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+  );
   self.skipWaiting();
 });
 
+// Activate
 self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-    ))
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      )
+    )
   );
   self.clients.claim();
 });
 
+// Fetch (offline fallback)
 self.addEventListener("fetch", event => {
-  const request = event.request;
-  if (request.method !== "GET") return;
-
-  const url = new URL(request.url);
-  if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
-
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put("/index.html", copy));
-          return response;
-        })
-        .catch(() => caches.match("/index.html"))
-    );
-    return;
-  }
-
   event.respondWith(
-    caches.match(request).then(cached => {
-      const update = fetch(request).then(response => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-        }
-        return response;
-      });
-      return cached || update;
-    })
+    fetch(event.request).catch(() =>
+      caches.match(event.request).then(res => res || caches.match("/index.html"))
+    )
   );
 });
